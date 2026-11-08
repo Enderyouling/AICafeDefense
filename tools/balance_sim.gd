@@ -1,9 +1,12 @@
 extends SceneTree
-# 第 02 章数值模拟：用一个「中等水平玩家」策略自动打每一关，输出胜负、满意度、星级与用时。运行：
-#   godot --headless --path . -s res://tools/balance_sim.gd
-#   DETAIL=1 godot --headless --path . -s res://tools/balance_sim.gd    # 额外打印漏怪记录
-# 策略：每隔「反应时间」收一次算力；按自动生成的布阵表部署（mini 挂在主力身上）；有来客上传送带时逆流；
-# 来客多或 Boss 在场时给狙击位超频；遮阳伞坏了就修；封条立刻撕掉；倒下的店员补回去。
+# 第 02、03 章数值模拟：用一个「中等水平玩家」策略自动打每一关，输出胜负、满意度、星级与用时。运行：
+#   godot --headless --path . -s res://tools/balance_sim.gd                 # 两章都跑
+#   CHAPTER=3 godot --headless --path . -s res://tools/balance_sim.gd       # 只跑第 03 章
+#   DETAIL=1 godot --headless --path . -s res://tools/balance_sim.gd        # 额外打印漏怪记录
+#   STAGE=42 LINEUP=0,1,27,22,29,34 godot ...                               # 只跑一关、试别的阵容
+# 策略：每隔「反应时间」收一次算力（认得出钓鱼假算力）；按自动生成的布阵表部署（mini 挂在主力身上）；有来客上传送带时逆流；
+# 来客多或 Boss 在场时给狙击位超频；遮阳伞坏了就修；封条、收购合同立刻撕掉；倒下的店员补回去；
+# 第 03 章：某一路挤了 3 个以上来客时升防火墙，来客逼近的那一路最贵的店员上云备份。
 
 const Battle = preload("res://battle.gd")
 const Campaign = preload("res://campaign.gd")
@@ -27,15 +30,17 @@ func pick(cards: Array, options: Array) -> int:
 func build_plan(cards: Array, boss_lane: int = -1) -> Array:
 	var prod := pick(cards, [13, 1])
 	var shooters := []
-	for c in [0, 10, 11, 5, 14, 2, 4, 16]:
+	for c in [0, 27, 10, 11, 25, 5, 14, 2, 4, 16]:
 		if c in cards:
 			shooters.append(c)
 	var main: int = shooters[0] if shooters.size() > 0 else 0
 	var second: int = shooters[1] if shooters.size() > 1 else main
-	var sniper := pick(cards, [8, 0])
-	var blocker := pick(cards, [9, 3])
-	var support := pick(cards, [15, 12, 4])
-	var mini := pick(cards, [17, 19, 20, 18])
+	var sniper := pick(cards, [8, 22, 28, 0])
+	var blocker := pick(cards, [29, 9, 26, 3])
+	var support := pick(cards, [21, 23, 24, 28, 15, 12, 4, 30])
+	var mini := pick(cards, [17, 19, 20, 18, 32, 34, 31, 33])
+	if prod < 0:
+		prod = main
 	var raw := [[prod, 2, 0], [main, 2, 1], [sniper, 0, 1], [prod, 1, 0], [main, 3, 1], [sniper, 1, 1], [prod, 3, 0], [blocker, 2, 4],
 		[prod, 4, 0], [main, 4, 1], [blocker, 3, 4], [prod, 0, 0], [mini, 0, 1], [mini, 1, 1], [second, 2, 2], [second, 3, 2],
 		[blocker, 4, 4], [support, 3, 3], [mini, 2, 1], [mini, 3, 1], [sniper, 0, 2], [second, 4, 2], [sniper, 1, 2], [mini, 4, 1], [support, 2, 3]]
@@ -76,11 +81,38 @@ func play(stage: int, reaction: float, cards: Array) -> Dictionary:
 			continue
 		think = 0.0
 		for i in range(b.tokens.size() - 1, -1, -1):
-			b.collect(i)
+			if not b.tokens[i].get("fake", false):
+				b.collect(i)
 		for cell in b.all_towers():
-			if b.towers[cell.y][cell.x].audit > b.time:
+			var unit: Dictionary = b.towers[cell.y][cell.x]
+			if unit.audit > b.time or unit.acquire > b.time:
 				for k in range(3):
 					b.tear_seal(cell.y, cell.x)
+		if b.chapter == 3:
+			# 防火墙：哪一路在第 7~8.8 列挤了 3 个以上来客就拦住。
+			for row in range(b.level.rows):
+				var crowd := 0
+				for e in b.enemies:
+					if e.row == row and e.x >= 7.0 and e.x <= 8.8 and not e.kind in Battle.BOSSES:
+						crowd += 1
+				if crowd >= 3 and b.power >= Battle.GATE_COST + 40 and b.raise_gate(row):
+					break
+			# 云备份：来客逼近的那一路，最贵的店员。
+			if b.backup_wait() <= 0.0 and b.power >= Battle.BACKUP_COST + 60:
+				var best := Vector2i(-1, -1)
+				var best_cost := 0
+				for cell in b.all_towers():
+					var unit: Dictionary = b.towers[cell.y][cell.x]
+					var cost: int = Campaign.CARDS[unit.card].cost
+					var hot := false
+					for e in b.enemies:
+						if e.row == cell.y and e.x < cell.x + 3.0:
+							hot = true
+					if hot and unit.backup <= b.time and cost > best_cost:
+						best = cell
+						best_cost = cost
+				if best.x >= 0:
+					b.backup_tower(best.y, best.x)
 		for cell in b.props:
 			if b.wreck_at(cell.y, cell.x) and b.power >= 160:
 				b.repair(cell.y, cell.x)
@@ -105,7 +137,7 @@ func play(stage: int, reaction: float, cards: Array) -> Dictionary:
 			var covered := false
 			for col in range(4):
 				var t = b.towers[row][col]
-				if t != null and not t.card in [1, 13, 3, 9, 15]:
+				if t != null and not t.card in [1, 13, 3, 9, 15, 21, 26, 29, 30, 23, 24]:
 					covered = true
 			if threatened and not covered:
 				for col in [1, 2, 3]:
@@ -137,8 +169,20 @@ func play(stage: int, reaction: float, cards: Array) -> Dictionary:
 	return {"result": b.result, "core": b.core, "time": b.time, "stars": stars, "uses": b.facility_uses, "leaked": b.leaked, "wave": b.wave}
 
 func _init() -> void:
-	for stage in Campaign.chapter_range(2):
-		var cards: Array = Main.CHAPTER_TWO_LINEUPS[stage - Campaign.CHAPTER_STARTS[1]]
+	var only := OS.get_environment("CHAPTER")
+	var stages := []
+	if only != "3":
+		stages += Campaign.chapter_range(2)
+	if only != "2":
+		stages += Campaign.chapter_range(3)
+	# 调参用：STAGE=42 LINEUP=0,1,27,22,29,34 只跑这一关、换阵容。
+	if OS.get_environment("STAGE") != "":
+		stages = [int(OS.get_environment("STAGE"))]
+	for stage in stages:
+		var number := Campaign.chapter(stage)
+		var cards: Array = (Main.CHAPTER_TWO_LINEUPS if number == 2 else Main.CHAPTER_THREE_LINEUPS)[stage - Campaign.CHAPTER_STARTS[number - 1]]
+		if OS.get_environment("LINEUP") != "":
+			cards = Array(OS.get_environment("LINEUP").split(",")).map(func(v): return int(v))
 		var line := "%s %-6s" % [Campaign.code(stage), Campaign.levels[stage].title]
 		for reaction in [1.0, 0.5]:
 			var r := play(stage, reaction, cards)

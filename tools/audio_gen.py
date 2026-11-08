@@ -952,6 +952,146 @@ def song_boss2():
 				s.add("snare", s.t(bar, 2 + k * 0.25), snare(0.3 + 0.08 * k), human=0.0)
 	return s.render(echo_beats=0.5, room=0.75)
 
+# ---------------------------------------------------------------- music: chapter 3 cloud (night-city synthwave)
+
+
+def song_cloud():
+	s = Song(112, 16)
+	s.bus("kick", gain=0.8, rev=0.0)
+	s.bus("clap", pan=0.05, gain=0.38, rev=0.3)
+	s.bus("hat", pan=0.35, gain=0.18, rev=0.08)
+	s.bus("bass", gain=0.58, rev=0.0, pump=0.6)
+	s.bus("pad", gain=0.34, rev=0.45, pump=0.7)
+	s.bus("arp", pan=-0.3, gain=0.26, rev=0.3, echo=0.35)
+	s.bus("lead", pan=0.12, gain=0.3, rev=0.35, echo=0.3)
+	s.bus("bell", pan=0.4, gain=0.15, rev=0.45)
+	Db = ("C#2", ["F3", "G#3", "C4", "D#4"])
+	Ab = ("G#1", ["G#3", "C4", "D#4", "A#4"])
+	Fm = ("F2", ["G#3", "C4", "D#4", "F4"])
+	Gb = ("F#2", ["A#3", "C#4", "F4", "G#4"])
+	Eb = ("D#2", ["G3", "A#3", "D#4", "F4"])
+	Bbm = ("A#1", ["A#3", "C#4", "F4", "G#4"])
+	chords = [Db, Ab, Fm, Gb, Db, Ab, Gb, Eb, Bbm, Fm, Gb, Ab, Bbm, Fm, Gb, Eb]
+	melody = [
+		[(0, 1, "F5"), (1, .5, "D#5"), (1.5, .5, "C5"), (2, 1.5, "G#5"), (3.5, .5, "F5")],
+		[(0, 1.5, "D#5"), (1.5, .5, "C5"), (2, 2, "G#4")],
+		[(0, 1, "C5"), (1, .5, "D#5"), (1.5, .5, "F5"), (2, 1, "G#5"), (3, 1, "F5")],
+		[(0, 2, "F5"), (2, 1, "D#5"), (3, 1, "C#5")],
+		[(0, 1, "F5"), (1, .5, "G#5"), (1.5, .5, "A#5"), (2, 1.5, "C6"), (3.5, .5, "A#5")],
+		[(0, 1.5, "G#5"), (1.5, .5, "F5"), (2, 2, "D#5")],
+		[(0, 1, "C#5"), (1, 1, "F5"), (2, 1, "A#5"), (3, 1, "G#5")],
+		[(0, 2, "G5"), (2, 1, "F5"), (3, 1, "D#5")],
+		[(0, 1, "C#5"), (1, .5, "F5"), (1.5, .5, "G#5"), (2, 1, "A#5"), (3, 1, "C#6")],
+		[(0, 1.5, "C6"), (1.5, .5, "G#5"), (2, 2, "F5")],
+		[(0, 1, "F5"), (1, .5, "G#5"), (1.5, .5, "A#5"), (2, 1, "C#6"), (3, 1, "F6")],
+		[(0, 1.5, "D#6"), (1.5, .5, "C6"), (2, 2, "G#5")],
+		[(0, 1, "A#5"), (1, 1, "C#6"), (2, 1, "F6"), (3, 1, "D#6")],
+		[(0, 1.5, "C6"), (1.5, .5, "G#5"), (2, 1, "F5"), (3, 1, "G#5")],
+		[(0, 1, "A#5"), (1, .5, "G#5"), (1.5, .5, "F5"), (2, 1, "C#5"), (3, 1, "F5")],
+		[(0, 2, "G5"), (2, 1, "A#5"), (3, 1, "D#5")],
+	]
+	for bar, (root, voicing) in enumerate(chords):
+		r = hz(root)
+		for e in range(8):
+			s.add("bass", s.t(bar, e * 0.5), synbass(r if e % 4 != 3 else r * 2.0, 0.42 * s.spb, 0.8, cut0=1700.0, cut1=280.0, fdec=0.07), human=0.0)
+		for note in voicing:
+			s.add("pad", s.t(bar, 0), pad(hz(note), 3.9 * s.spb, 0.5, cut=2400.0, attack=0.25, release=0.4, detune=0.008), human=0.0)
+		tones = [hz(x) * 2.0 for x in voicing]
+		order = [0, 1, 2, 3, 2, 1, 2, 3] if bar % 2 == 0 else [0, 2, 1, 3, 0, 2, 3, 2]
+		for k in range(16):
+			s.add("arp", s.t(bar, k * 0.25), pluck(tones[order[k % 8]], 0.22, 0.42, bright=0.6, decay=0.995), human=0.0)
+		if bar >= 8:
+			s.add("bell", s.t(bar, 0), bell(hz(voicing[-1]) * 4.0, 0.4, length=0.9), human=0.0)
+			s.add("bell", s.t(bar, 2.5), bell(hz(voicing[1]) * 4.0, 0.3, length=0.7), human=0.0)
+	for bar, notes in enumerate(melody):
+		if bar < 4:
+			continue
+		for b, d, note in notes:
+			s.add("lead", s.t(bar, b), lead(hz(note), d * s.spb * 0.88, 0.45, duty=0.42, cut=3000.0, vib=0.006), human=0.0)
+			s.add("lead", s.t(bar, b), bell(hz(note), 0.35, length=0.4), human=0.0)
+	for bar in range(16):
+		for b in range(4):
+			s.add("kick", s.t(bar, b), kick(0.9, punch=95.0, base=46.0, length=0.26), human=0.0)
+		for b in (1, 3):
+			s.add("clap", s.t(bar, b), clap(0.75), human=0.0)
+		for k in range(16):
+			if k % 4 == 2 or (k % 2 == 1 and bar % 2 == 1):
+				s.add("hat", s.t(bar, k * 0.25), hat(0.5 if k % 4 == 2 else 0.25, 0.03), human=0.0)
+	return s.render(echo_beats=0.75, room=0.86)
+
+# ---------------------------------------------------------------- music: chapter 3 boss (glitchy darksynth)
+
+
+def glitch(vel=0.5):
+	x = noise_burst(0.05, hp=1800, dec=0.03)
+	return [round(v * 4.0) / 4.0 * vel for v in x]
+
+
+def song_boss3():
+	s = Song(158, 16)
+	s.bus("kick", gain=0.95, rev=0.0)
+	s.bus("snare", pan=0.05, gain=0.52, rev=0.22)
+	s.bus("hat", pan=0.35, gain=0.18, rev=0.05)
+	s.bus("glitch", pan=-0.4, gain=0.22, rev=0.15)
+	s.bus("bass", gain=0.58, rev=0.0, drive=3.0, pump=0.35)
+	s.bus("arp", pan=-0.25, gain=0.25, rev=0.2, echo=0.25)
+	s.bus("pad", gain=0.22, rev=0.4, pump=0.6)
+	s.bus("lead", pan=0.08, gain=0.3, rev=0.25, echo=0.2)
+	s.bus("alarm", pan=0.3, gain=0.16, rev=0.35)
+	s.bus("crash", pan=0.2, gain=0.26, rev=0.25)
+	chords = [("C2", ["C4", "D#4", "G4"]), ("C2", ["C4", "D#4", "G4"]), ("C#2", ["C#4", "F4", "G#4"]), ("A#1", ["A#3", "D4", "F4"]),
+		("C2", ["C4", "D#4", "G4"]), ("G#1", ["G#3", "C4", "D#4"]), ("F1", ["F3", "G#3", "C4"]), ("G1", ["G3", "B3", "D4"]),
+		("G#1", ["G#3", "C4", "D#4"]), ("A#1", ["A#3", "D4", "F4"]), ("C2", ["C4", "D#4", "G4"]), ("C#2", ["C#4", "F4", "G#4"]),
+		("G#1", ["G#3", "C4", "D#4"]), ("A#1", ["A#3", "D4", "F4"]), ("G1", ["G3", "B3", "D4"]), ("G1", ["G3", "B3", "D4"])]
+	melody = [
+		[(0, 1, "G5"), (1, .5, "D#5"), (1.5, .5, "F5"), (2, 1, "G5"), (3, 1, "C6")],
+		[(0, 1.5, "A#5"), (1.5, .5, "G#5"), (2, 2, "G5")],
+		[(0, 1, "G#5"), (1, .5, "F5"), (1.5, .5, "G#5"), (2, 1, "C#6"), (3, 1, "C6")],
+		[(0, 1.5, "A#5"), (1.5, .5, "F5"), (2, 2, "D5")],
+		[(0, 1, "D#5"), (1, 1, "G5"), (2, 1, "C6"), (3, 1, "D#6")],
+		[(0, 1.5, "D6"), (1.5, .5, "C6"), (2, 2, "G#5")],
+		[(0, 1, "F5"), (1, 1, "G#5"), (2, 1, "C6"), (3, 1, "D#6")],
+		[(0, 2, "D6"), (2, 1, "B5"), (3, 1, "G5")],
+		[(0, 1, "C6"), (1, .5, "D#6"), (1.5, .5, "C6"), (2, 1, "G#5"), (3, 1, "D#5")],
+		[(0, 1.5, "F5"), (1.5, .5, "A#5"), (2, 2, "D6")],
+		[(0, 1, "G6"), (1, .5, "F6"), (1.5, .5, "D#6"), (2, 1, "C6"), (3, 1, "G5")],
+		[(0, 1.5, "G#5"), (1.5, .5, "C#6"), (2, 2, "F6")],
+		[(0, 1, "D#6"), (1, 1, "C6"), (2, 1, "G#5"), (3, 1, "C6")],
+		[(0, 1.5, "D6"), (1.5, .5, "A#5"), (2, 2, "F5")],
+		[(0, 1, "G5"), (1, 1, "B5"), (2, 1, "D6"), (3, 1, "F6")],
+		[(0, 2, "G6"), (2, 1, "D6"), (3, 1, "B5")],
+	]
+	for bar, (root, voicing) in enumerate(chords):
+		r = hz(root)
+		for k in range(16):
+			if k % 4 != 2:
+				s.add("bass", s.t(bar, k * 0.25), synbass(r if k % 8 != 7 else r * 2.0, 0.22 * s.spb, 0.85, cut0=1900.0, cut1=300.0, fdec=0.04), human=0.0)
+		tones = [hz(x) * 2.0 for x in voicing]
+		for k in range(16):
+			s.add("arp", s.t(bar, k * 0.25), pluck(tones[(k * 2 + bar) % 3] * (2.0 if k % 8 == 7 else 1.0), 0.16, 0.42, bright=0.7, decay=0.994), human=0.0)
+		for note in voicing:
+			s.add("pad", s.t(bar, 0), pad(hz(note), 3.9 * s.spb, 0.45, cut=1600.0, attack=0.2, release=0.3, detune=0.01), human=0.0)
+		if bar in (0, 8):
+			s.add("crash", s.t(bar, 0), crash(0.8, 1.6))
+			for k in range(4):
+				s.add("alarm", s.t(bar, k), lead(1046.5 if k % 2 == 0 else 880.0, 0.9 * s.spb, 0.55, duty=0.5, cut=3000.0, vib=0.0), human=0.0)
+	for bar, notes in enumerate(melody):
+		for b, d, note in notes:
+			s.add("lead", s.t(bar, b), lead(hz(note), d * s.spb * 0.9, 0.65, cut=3400.0, saw=True), human=0.0)
+	for bar in range(16):
+		for b in ((0, 1, 2, 3) if bar % 4 != 3 else (0, 1, 1.75, 2, 2.5, 3, 3.5)):
+			s.add("kick", s.t(bar, b), kick(1.0, punch=125.0, base=50.0, length=0.2), human=0.0)
+		for b in (1, 3):
+			s.add("snare", s.t(bar, b), snare(0.9, tone=210.0, snap=0.16), human=0.0)
+		for k in range(16):
+			s.add("hat", s.t(bar, k * 0.25), hat(0.45 if k % 2 == 0 else 0.22, 0.025), human=0.0)
+		for b in ((0.75, 2.25) if bar % 2 == 0 else (1.75, 3.25, 3.5)):
+			s.add("glitch", s.t(bar, b), glitch(0.6), human=0.0)
+		if bar == 15:
+			for k in range(8):
+				s.add("snare", s.t(bar, 2 + k * 0.25), snare(0.3 + 0.08 * k), human=0.0)
+	return s.render(echo_beats=0.5, room=0.78)
+
 # ---------------------------------------------------------------- sound effects
 
 
@@ -1165,6 +1305,41 @@ def sfx_all():
 	S["beam"] = seq((0, lowpass(sweep_tone(900, 180, 0.6, att=0.005, dec=0.3, shape="saw"), 3500), 0.6), (0, noise_burst(0.5, hp=1500, dec=0.2), 0.5),
 		(0, sweep_tone(80, 40, 0.4, dec=0.2), 0.7))
 	S["steal"] = seq((0, sweep_tone(1200, 1800, 0.06, dec=0.03), 0.4), (0.07, noise_burst(0.08, lp=3000, dec=0.03), 0.5), (0.1, sweep_tone(600, 300, 0.1, dec=0.05), 0.3))
+	# ---- 第 03 章：云端分店
+	S["search"] = seq((0, sweep_tone(1100, 2600, 0.07, dec=0.04), 0.5), (0.05, chime(2637, 0.5, 0.3), 0.6), (0.05, noise_burst(0.12, hp=6000, dec=0.04), 0.15))
+	S["pulse"] = seq((0, sweep_tone(130, 55, 0.22, dec=0.1), 0.9), (0, noise_burst(0.05, lp=1500, dec=0.02), 0.4),
+		(0.01, chime(784, 0.4, 0.35), 0.4), (0.01, chime(988, 0.4, 0.35), 0.35), (0.01, chime(1175, 0.4, 0.35), 0.3))
+	tape = lowpass(sweep_tone(1500, 160, 0.55, att=0.01, dec=0.5, shape="saw", vib=0.05, vib_hz=11), 2600)
+	S["rewind"] = seq((0, tape, 0.6), (0, noise_burst(0.55, lp=3000, lp_end=600, att=0.02, dec=0.4), 0.4), (0.5, sweep_tone(90, 60, 0.12, dec=0.05), 0.5))
+	S["diffuse"] = seq((0, noise_burst(0.3, lp=700, lp_end=3000, att=0.03, dec=0.15), 0.6), (0.06, chime(1568, 0.3, 0.3), 0.35), (0.1, chime(2349, 0.25, 0.3), 0.3))
+	S["hug"] = seq((0, sweep_tone(260, 620, 0.16, att=0.01, dec=0.12, vib=0.03, vib_hz=12), 0.7), (0.08, chime(1046.5, 0.5, 0.35), 0.5), (0.14, chime(1318.5, 0.4, 0.35), 0.4))
+	S["burst"] = seq(*[(k * 0.05, lowpass(sweep_tone(2200, 900, 0.05, dec=0.025, shape="square"), 5000), 0.35) for k in range(3)])
+	S["orbital"] = seq((0, lowpass(sweep_tone(2600, 220, 0.55, att=0.005, dec=0.3, shape="saw"), 4500), 0.5), (0.25, sweep_tone(120, 38, 0.6, dec=0.25), 1.0),
+		(0.25, noise_burst(0.7, lp=2500, lp_end=200, dec=0.3), 0.8), (0, noise_burst(0.3, hp=5000, att=0.15, dec=0.1), 0.25))
+	S["reflect"] = seq((0, metal([1900, 4700, 6900], 0.12, 0.6), 0.8), (0, sweep_tone(900, 1400, 0.05, dec=0.03), 0.3))
+	S["agent"] = seq(*[(k * 0.06, chime([1568, 1976, 2349, 3136][k], 0.45, 0.25), 0.6) for k in range(4)], (0.24, noise_burst(0.15, hp=6000, dec=0.05), 0.15))
+	S["gate"] = seq((0, noise_burst(0.5, lp=400, lp_end=3500, att=0.08, dec=0.25), 0.8), (0.1, metal([420, 1130, 1980], 0.3, 0.6), 0.6),
+		(0.1, sweep_tone(110, 70, 0.25, dec=0.1), 0.8), *[(rng.uniform(0.15, 0.45), noise_burst(0.01, hp=2500, dec=0.004), 0.35) for _ in range(6)])
+	S["backup"] = seq(*[(k * 0.07, chime([1046.5, 1318.5, 1568, 2093][k], 0.45, 0.3), 0.55) for k in range(4)], (0, sweep_tone(400, 1600, 0.3, att=0.02, dec=0.3), 0.2))
+	S["restore"] = seq((0, sweep_tone(260, 1300, 0.45, att=0.03, dec=0.5, vib=0.02, vib_hz=8), 0.5), (0.35, chime(2093, 0.6, 0.5), 0.6),
+		(0.42, chime(2637, 0.5, 0.5), 0.5), (0.5, chime(3136, 0.4, 0.5), 0.4), (0, noise_burst(0.6, hp=6000, att=0.2, dec=0.2), 0.15))
+	S["hop"] = seq((0, sweep_tone(220, 760, 0.1, dec=0.06), 0.6), (0.11, sweep_tone(160, 110, 0.06, dec=0.03), 0.5))
+	S["lock"] = seq((0, metal([1500, 3300], 0.06, 0.6), 0.7), (0.06, sweep_tone(160, 90, 0.1, dec=0.04), 0.8), (0.06, noise_burst(0.05, lp=1800, dec=0.02), 0.6),
+		(0.14, lowpass(sweep_tone(220, 210, 0.15, dec=0.1, shape="square"), 1400), 0.3))
+	S["drain"] = seq((0, lowpass(sweep_tone(900, 300, 0.22, dec=0.12, shape="square"), 2400), 0.35), (0.04, metal([3100, 5200], 0.05, 0.4), 0.3))
+	S["phished"] = seq((0, lowpass(sweep_tone(420, 140, 0.3, dec=0.15, shape="square"), 1800), 0.6), (0, noise_burst(0.12, lp=2500, dec=0.05), 0.4),
+		(0.16, lowpass(sweep_tone(200, 190, 0.18, dec=0.1, shape="square"), 1200), 0.4))
+	crunch = noise_burst(0.6, lp=6000, hp=300, dec=0.3)
+	for i in range(len(crunch)):
+		crunch[i] = round(crunch[i] * 6.0) / 6.0 * (0.2 if (i // at(0.03)) % 3 == 1 else 1.0)
+	S["bluescreen"] = seq((0, crunch, 0.6), (0, lowpass(sweep_tone(1200, 60, 0.7, att=0.005, dec=0.6, shape="saw"), 3000), 0.6), (0.02, sweep_tone(70, 30, 0.6, dec=0.3), 0.9))
+	S["acquire"] = seq((0, metal([2600, 4100, 5900], 0.25, 0.6), 0.7), (0.02, chime(2093, 0.5, 0.4), 0.5), (0.25, sweep_tone(95, 45, 0.25, dec=0.1), 1.0),
+		(0.25, noise_burst(0.08, lp=1500, dec=0.03), 0.8))
+	S["storm"] = seq((0, noise_burst(1.4, lp=300, lp_end=1800, att=0.3, dec=1.0), 0.6), (0.2, sweep_tone(60, 30, 1.0, dec=0.6), 0.7),
+		(0.25, noise_burst(0.02, hp=1500, dec=0.006), 0.7), (0.3, noise_burst(0.9, lp=2500, lp_end=200, dec=0.5), 0.6))
+	S["outage"] = seq((0, noise_burst(0.02, hp=1500, dec=0.006), 0.8), (0.02, lowpass(sweep_tone(700, 30, 1.2, att=0.01, dec=1.2, shape="saw"), 1800), 0.8),
+		(0.02, sweep_tone(55, 28, 0.8, dec=0.5), 0.6), (0.9, metal([300, 760], 0.15, 0.5), 0.5))
+	S["bait"] = seq((0, sweep_tone(500, 1300, 0.06, dec=0.03), 0.5), (0.06, sweep_tone(700, 1500, 0.05, dec=0.03), 0.3))
 	return S
 
 # ---------------------------------------------------------------- main
@@ -1189,7 +1364,8 @@ def main():
 			stats("sfx_" + name, data)
 	if what in ("all", "music"):
 		tmp = tempfile.mkdtemp()
-		songs = (("music_menu", song_menu), ("music_battle", song_battle), ("music_boss", song_boss), ("music_terrace", song_terrace), ("music_boss2", song_boss2))
+		songs = (("music_menu", song_menu), ("music_battle", song_battle), ("music_boss", song_boss), ("music_terrace", song_terrace), ("music_boss2", song_boss2),
+			("music_cloud", song_cloud), ("music_boss3", song_boss3))
 		only = os.environ.get("ONLY")
 		for name, fn in songs:
 			if only and name not in only.split(","):

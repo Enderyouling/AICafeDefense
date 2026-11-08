@@ -22,12 +22,27 @@ const CARDS = [
 	{"name": "GPT mini", "role": "mini · 小光弹", "desc": "附属炮台：可以和主力店员站在同一格，跟着一起发射小光弹。", "key": "gpt_mini", "cost": 50, "hp": 40, "cooldown": 4.0, "interval": 1.0, "pose": 0.35, "tag": "mini"},
 	{"name": "Claude Haiku", "role": "mini · 俳句护盾", "desc": "附属炮台：同格的主力店员受到的伤害 −30%；单独放时可以挡路。", "key": "haiku", "cost": 50, "hp": 120, "cooldown": 8.0, "interval": 0.0, "pose": 0.4, "tag": "mini"},
 	{"name": "Gemini Flash", "role": "mini · 闪电加速", "desc": "附属炮台：同格的主力店员攻速 +25%，自己也会放小电弧。", "key": "flash", "cost": 75, "hp": 40, "cooldown": 8.0, "interval": 0.8, "pose": 0.3, "tag": "mini"},
-	{"name": "Qwen Turbo", "role": "mini · 小破甲", "desc": "附属炮台：发射小扇刃，对护盾和装甲造成双倍伤害。", "key": "turbo", "cost": 60, "hp": 40, "cooldown": 6.0, "interval": 1.4, "pose": 0.35, "tag": "mini"}
+	{"name": "Qwen Turbo", "role": "mini · 小破甲", "desc": "附属炮台：发射小扇刃，对护盾和装甲造成双倍伤害。", "key": "turbo", "cost": 60, "hp": 40, "cooldown": 6.0, "interval": 1.4, "pose": 0.35, "tag": "mini"},
+	{"name": "Copilot", "role": "协同副驾", "desc": "上下左右相邻店员的伤害 +20%；她们开火时，Copilot 会跟着补一发协同弹。", "key": "copilot", "cost": 125, "hp": 110, "cooldown": 10.0, "interval": 0.6, "pose": 0.4},
+	{"name": "Perplexity", "role": "精准检索", "desc": "锁定本路和相邻两路里生命最高的来客，直接命中 40 伤害，每第 3 发暴击翻倍。", "key": "perplexity", "cost": 150, "hp": 100, "cooldown": 10.0, "interval": 2.2, "pose": 0.45},
+	{"name": "Suno", "role": "节拍光环", "desc": "每 4 秒放出节拍：周围 2.5 格内的来客减速 40%（2 秒），身边店员攻速 +15%。", "key": "suno", "cost": 125, "hp": 100, "cooldown": 10.0, "interval": 4.0, "pose": 0.6},
+	{"name": "Sora", "role": "时间倒带", "desc": "每 12 秒把本路前方所有来客倒带 1.2 格并定住 0.5 秒（Boss 无效）。", "key": "sora", "cost": 175, "hp": 100, "cooldown": 18.0, "interval": 12.0, "pose": 0.6},
+	{"name": "Stable Diffusion", "role": "扩散溅射", "desc": "噪声弹 22 伤害，命中时向上下两路扩散，再造成 12 伤害。", "key": "sd", "cost": 150, "hp": 100, "cooldown": 10.0, "interval": 2.0, "pose": 0.5},
+	{"name": "Hugging Face", "role": "拥抱定身", "desc": "挡路；每 5 秒抱住前方 1.5 格内最近的来客，定身 2.5 秒（Boss 无效）。", "key": "hug", "cost": 75, "hp": 300, "cooldown": 12.0, "interval": 5.0, "pose": 0.5},
+	{"name": "可灵", "role": "灵动连射", "desc": "每 2.4 秒连射 3 发，每发 14 伤害。", "key": "kling", "cost": 150, "hp": 100, "cooldown": 10.0, "interval": 2.4, "pose": 0.5},
+	{"name": "天工", "role": "天降打击", "desc": "每 14 秒锁定来客最密集的地方，1 秒后天降光柱，周围一格内 110 伤害。", "key": "skywork", "cost": 200, "hp": 100, "cooldown": 20.0, "interval": 14.0, "pose": 0.6},
+	{"name": "Claude Opus", "role": "SP · 书城守护", "desc": "SP 版 Claude：900 耐久挡路，被啃时把 40% 的伤害反弹回去。", "key": "opus", "cost": 175, "hp": 900, "cooldown": 20.0, "interval": 0.0, "pose": 0.56, "tag": "SP"},
+	{"name": "Kimi-K2", "role": "SP · 自主代理", "desc": "SP 版 Kimi：每 8 秒自动收走场上所有真算力（每枚额外 +5），顺手删掉钓鱼假算力。", "key": "k2", "cost": 150, "hp": 100, "cooldown": 16.0, "interval": 8.0, "pose": 0.85, "tag": "SP"},
+	{"name": "Gemini Nano", "role": "mini · 随身治疗", "desc": "附属炮台：同格主力和自己每秒回复 4 生命。", "key": "nano", "cost": 40, "hp": 40, "cooldown": 6.0, "interval": 0.0, "pose": 0.3, "tag": "mini"},
+	{"name": "Ministral", "role": "mini · 寒风小弹", "desc": "附属炮台：小冰弹 8 伤害并减速 30%。", "key": "ministral", "cost": 60, "hp": 40, "cooldown": 6.0, "interval": 1.6, "pose": 0.35, "tag": "mini"},
+	{"name": "豆包 Lite", "role": "mini · 小额产出", "desc": "附属炮台：部署 6 秒后开始，每 10 秒产出 10 算力。", "key": "doubao_lite", "cost": 50, "hp": 40, "cooldown": 8.0, "interval": 10.0, "pose": 0.6, "tag": "mini"},
+	{"name": "GLM Flash", "role": "mini · 照明扫描", "desc": "附属炮台：每 6 秒照亮本路前方 4 格，让熄灯中和潜行的来客显形 4 秒。", "key": "glm_flash", "cost": 50, "hp": 40, "cooldown": 8.0, "interval": 6.0, "pose": 0.4, "tag": "mini"}
 ]
 
-const UNLOCKS = [0, 1, 2, 3, 5, 7, 9, 11, 22, 23, 24, 26, 27, 29, 30, 31, 28, 22, 24, 25, 28]
-const CHAPTER_STARTS = [0, 22]
-const CHAPTER_NAMES = ["算力咖啡厅", "露台风波"]
+const UNLOCKS = [0, 1, 2, 3, 5, 7, 9, 11, 22, 23, 24, 26, 27, 29, 30, 31, 28, 22, 24, 25, 28,
+	34, 35, 36, 38, 39, 37, 41, 42, 40, 43, 34, 36, 35, 37]
+const CHAPTER_STARTS = [0, 22, 34]
+const CHAPTER_NAMES = ["算力咖啡厅", "露台风波", "云端分店"]
 const TRIAL = [
 	{"title": "开店准备", "rows": 1, "power": 150, "waves": 1, "brief": "捡起算力，部署 GPT，拦住第一批票据职员。",
 		"spawns": [[15, 0, 1, false], [29, 0, 1, false]]},
@@ -57,7 +72,13 @@ const ENEMIES = {
 	"V": {"key": "victor", "name": "督察官维克多", "hp": 4200.0, "speed": 0.2, "bite": 40.0, "core": 100},
 	"Q": {"key": "troll", "name": "差评水军", "hp": 40.0, "speed": 0.95, "bite": 8.0, "core": 3},
 	"K": {"key": "scalper", "name": "黄牛", "hp": 150.0, "speed": 0.55, "bite": 15.0, "core": 8},
-	"M": {"key": "carrier", "name": "外卖无人机母舰", "hp": 1300.0, "speed": 0.11, "bite": 0.0, "core": 100, "fly": true}
+	"M": {"key": "carrier", "name": "外卖无人机母舰", "hp": 1300.0, "speed": 0.11, "bite": 0.0, "core": 100, "fly": true},
+	"J": {"key": "crawler", "name": "爬虫机器人", "hp": 60.0, "speed": 0.8, "bite": 10.0, "core": 4},
+	"L": {"key": "ransomware", "name": "勒索软件", "hp": 140.0, "speed": 0.45, "bite": 12.0, "core": 10},
+	"N": {"key": "miner", "name": "挖矿机", "hp": 340.0, "speed": 0.25, "bite": 14.0, "core": 15},
+	"F": {"key": "phishing", "name": "钓鱼邮件", "hp": 90.0, "speed": 0.6, "bite": 12.0, "core": 6},
+	"G": {"key": "behemoth", "name": "宕机巨兽", "hp": 2400.0, "speed": 0.12, "bite": 50.0, "core": 100},
+	"Z": {"key": "cyrus", "name": "财团总裁·赛勒斯", "hp": 5000.0, "speed": 0.18, "bite": 50.0, "core": 100}
 }
 
 # 第 02 章：标题、初始算力、简介、各波出怪（"3Q" 表示第 3 路来一队 3 个差评水军）、遮阳伞 (列, 路)、关卡事件、是否 Boss 关。
@@ -75,6 +96,22 @@ const CHAPTER_TWO = [
 	["博主围城", 440, "博主和黑客一起来。Midjourney 画的墙能替店员挡住闪光和冲撞。", ["3P 4P 1Y", "2Y 4H 5P 3Q", "3P 4H 5H 1Y 2Y", "4P 5P 3K 1Y 2Y", "3H 4H 5P 3P 1Y 2Y", "2Y 3P 4P 5W 1Y 4H 3Q"], [Vector2i(5, 2), Vector2i(5, 4)], "", false],
 	["全线停电", 460, "第 3 波停电，所有来客一起压上。提前铺好挡路的店员。", ["3W 4P 1Y 5H", "2Y 3K 4Q 5W", "3H 4W 5P 1Y 2Y 3Q", "4K 5H 3P 2Y 1Y", "3W 4W 5K 1Y 2Y 4P", "2Y 1Y 3H 4H 5W 3P 4Q 5K"], [Vector2i(6, 2), Vector2i(4, 3)], "blackout", false],
 	["督察官维克多", 480, "维克多有三个阶段：先撕掉封条，再顶住资金冻结，最后在 4 秒内打断他的终极差评。", ["3C 4P 1Y", "2H 4W 5Q 1Y 2Y", "3P 4H 5W 1Y 2Y", "3V 1Y 2Y 4Q 5C", "2H 4P 5W 1Y 4K", "3H 4H 5P 1Y 2Y 3Q", "4W 5W 3P 2H 1Y 2Y 4K"], [Vector2i(6, 3), Vector2i(5, 4)], "", true]
+]
+
+# 第 03 章「云端分店」：数据中心里的夜班。所有关卡都有防火墙闸门和云备份；事件 dark = 熄灯巡检，storm = 第 3 波数据风暴。
+const CHAPTER_THREE = [
+	["云端开张", 350, "爬虫机器人第一次被挡住时会跳过去。点「防火墙」可以把一整路拦住 5 秒。", ["3J 2C 4C", "1J 5J 3C 2C", "2J 4J 3P 1C 5C", "1J 2J 3J 4C 5Q"], "", false],
+	["勒索来信", 360, "被勒索软件咬过的店员会被加密停手，打倒勒索软件才能解开。", ["3L 2J 4C", "2L 4J 1C 5C", "3L 1J 5J 2P 4C", "2L 4L 3J 1Q 5C", "1J 3L 5J 2H 4P"], "", false],
+	["节拍夜班", 380, "挖矿机活着时每秒偷走 2 算力。早点集火把它拆掉。", ["3N 2J 4J", "2Q 4N 1C 5J", "3L 2J 4J 1P 5C", "2N 4L 3Q 1J 5J", "3N 1L 5L 2J 4J 3Q"], "", false],
+	["熄灯巡检", 400, "熄灯时只看得见最前排店员前方 3 格内的来客。钓鱼邮件会丢下假算力，点到会扣钱。", ["3F 2J 4C", "2F 4L 1J 5J", "3N 1F 5F 2Q 4J", "2L 4L 3F 1P 5H", "1J 2F 3N 4F 5J 3L"], "dark", false],
+	["数据风暴", 410, "第 3 波会刮起数据风暴，来客都套上 40 点护盾。", ["3J 2W 4L", "2F 4N 1J 5J 3Q", "3L 1W 5L 2J 4F", "2N 4N 3J 1Q 5P", "3W 2L 4L 1F 5F 3J"], "storm", false],
+	["宕机巨兽", 460, "宕机巨兽每 9 秒放一次蓝屏冲击，瘫痪身边三路的店员。用云备份保住主力。", ["3J 2C 4F", "2L 4N 1Q 5J", "3G 1J 5J 2F 4L", "2N 4W 1J 5J 3Q", "3L 2F 4F 1H 5H"], "", true],
+	["勒索高峰", 430, "勒索软件成群出现，别让它们把整排店员都加密。", ["2L 4L 3J", "1L 3L 5L 2Q", "2L 4L 3N 1J 5J", "3L 1F 5F 2L 4L", "1L 2L 3N 4L 5L 3J 2Q"], "", false],
+	["爬虫洪流", 440, "爬虫一波接一波地跳过前排。后排也要留好火力。", ["3J 3J 2J 4J", "1J 5J 2Q 4Q 3J", "2J 4J 3L 1J 5J 3N", "1J 2J 3J 4J 5J 3F 2J", "1Q 5Q 2J 4J 3W 3J 1J 5J"], "", false],
+	["暗网挖矿", 460, "熄灯里藏着挖矿机。用 GLM Flash 或往前站的店员照亮路面。", ["3N 2J 4F", "2N 4N 1J 5J", "3F 1N 5L 2J 4J", "2N 3L 4N 1F 5F 3J", "1N 5N 3W 2J 4J 3F"], "dark", false],
+	["钓鱼风暴", 470, "第 3 波数据风暴来袭，钓鱼邮件到处撒假算力。Kimi-K2 能顺手把假算力删掉。", ["3F 2J 4L", "2F 4F 1Q 5N", "3F 1L 5L 2W 4J 3J", "2F 4N 3L 1F 5F", "3W 1F 5F 2L 4L 3N 2J"], "storm", false],
+	["全面断网", 480, "熄灯、勒索、挖矿一起来。防火墙和云备份都要用上。", ["3L 2N 4J 1F", "2W 4F 1J 5J 3L", "3N 1L 5L 2F 4F 3J", "2L 4L 3W 1N 5H", "3N 1F 5F 2L 4L 3J 2J", "1W 2L 3N 4L 5W 3F 2J 4J"], "dark", false],
+	["财团总裁", 520, "赛勒斯有三个阶段：先挡住并购来的爬虫，再撑过断网熄灯，最后点掉收购标记，别让店员被挖走。", ["3J 2L 4F", "2N 4L 1J 5J", "3F 1L 5L 2Q 4Q", "3Z 1J 5J 2L 4L", "2N 4N 1F 5F 3J", "1L 2L 4L 5L 3W", "2N 4N 3L 1J 5J 2F 4F"], "", true]
 ]
 
 const CHAPTER = [
@@ -136,10 +173,26 @@ static func make_levels() -> Array:
 		result.append({"title": row[0], "rows": 5, "power": row[1], "brief": row[2], "waves": row[3].size(),
 			"arena": "terrace", "blocked": [], "drop": 9.0, "spawns": spawns, "chapter": 2,
 			"umbrellas": row[4], "event": row[5], "event_wave": 3, "conveyor": [0, 1], "charger": true, "boss": row[6]})
+	for idx in range(CHAPTER_THREE.size()):
+		var row: Array = CHAPTER_THREE[idx]
+		var spawns := []
+		var at := 16.0
+		for wave in range(row[3].size()):
+			for token in String(row[3][wave]).split(" ", false):
+				for k in range(3 if token[1] == "Q" else 1):
+					spawns.append([at + k * 0.45, int(token[0]) - 1, wave + 1, token[1]])
+				at += 2.7
+			at += 9.0
+		result.append({"title": row[0], "rows": 5, "power": row[1], "brief": row[2], "waves": row[3].size(),
+			"arena": "cloud", "blocked": [], "drop": 9.0, "spawns": spawns, "chapter": 3,
+			"umbrellas": [], "event": row[4], "event_wave": 3, "conveyor": [], "charger": false, "gates": true, "backup": true, "boss": row[5]})
 	return result
 
 static func chapter(stage: int) -> int:
-	return 2 if stage >= CHAPTER_STARTS[1] else 1
+	for k in range(CHAPTER_STARTS.size() - 1, -1, -1):
+		if stage >= CHAPTER_STARTS[k]:
+			return k + 1
+	return 1
 
 static func chapter_range(number: int) -> Array:
 	var start: int = CHAPTER_STARTS[number - 1]
@@ -148,7 +201,8 @@ static func chapter_range(number: int) -> Array:
 
 static func code(stage: int) -> String:
 	if stage >= CHAPTER_STARTS[1]:
-		return "2-%d" % (stage - CHAPTER_STARTS[1] + 1)
+		var number := chapter(stage)
+		return "%d-%d" % [number, stage - CHAPTER_STARTS[number - 1] + 1]
 	return "1-20EX" if stage == 21 else "1-%d" % stage
 
 static func is_mini(card: int) -> bool:
