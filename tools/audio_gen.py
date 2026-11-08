@@ -508,8 +508,8 @@ class Song:
 		self.n = at(bars * beats * self.spb)
 		self.buses = {}
 
-	def bus(self, name, pan=0.0, gain=1.0, rev=0.2, echo=0.0):
-		self.buses[name] = {"buf": [0.0] * self.n, "pan": pan, "gain": gain, "rev": rev, "echo": echo}
+	def bus(self, name, pan=0.0, gain=1.0, rev=0.2, echo=0.0, pump=0.0, drive=0.0):
+		self.buses[name] = {"buf": [0.0] * self.n, "pan": pan, "gain": gain, "rev": rev, "echo": echo, "pump": pump, "drive": drive}
 
 	def t(self, bar, beat):
 		return (bar * 4 + beat) * self.spb
@@ -529,7 +529,14 @@ class Song:
 		n = self.n
 		L, R = [0.0] * n, [0.0] * n
 		rev_in, echo_in = [0.0] * n, [0.0] * n
+		beat = self.spb * SR
 		for b in self.buses.values():
+			if b["drive"]:
+				d = b["drive"]
+				b["buf"] = [math.tanh(v * d) / math.tanh(d) for v in b["buf"]]
+			if b["pump"]:
+				depth = b["pump"]
+				b["buf"] = [v * (1.0 - depth * max(0.0, 1.0 - ((i % beat) / beat) / 0.45) ** 2) for i, v in enumerate(b["buf"])]
 			p = (b["pan"] + 1.0) * math.pi / 4.0
 			gl, gr = math.cos(p) * b["gain"], math.sin(p) * b["gain"]
 			buf = b["buf"]
@@ -811,6 +818,140 @@ def song_boss():
 				s.add("tom", s.t(bar, 2 + k * 0.25), tom(0.8, f, f * 0.6), human=0.0)
 	return s.render(echo_beats=0.5, room=0.78)
 
+# ---------------------------------------------------------------- music: chapter 2 terrace (sunny future-bass bossa)
+
+
+def song_terrace():
+	s = Song(124, 16)
+	s.bus("kick", gain=0.85, rev=0.0)
+	s.bus("perc", pan=0.25, gain=0.38, rev=0.15)
+	s.bus("clap", pan=-0.05, gain=0.42, rev=0.2)
+	s.bus("bass", gain=0.6, rev=0.0, pump=0.55)
+	s.bus("chords", gain=0.38, rev=0.35, pump=0.8)
+	s.bus("guitar", pan=-0.35, gain=0.32, rev=0.25)
+	s.bus("lead", pan=0.1, gain=0.34, rev=0.3, echo=0.3)
+	s.bus("sparkle", pan=0.4, gain=0.16, rev=0.4, echo=0.3)
+	A = ("A2", ["A3", "C#4", "E4", "B4"])
+	E = ("E2", ["G#3", "B3", "E4", "F#4"])
+	Fm = ("F#2", ["A3", "C#4", "E4", "F#4"])
+	D = ("D2", ["A3", "D4", "F#4", "C#5"])
+	Bm = ("B1", ["A3", "B3", "D4", "F#4"])
+	Cm = ("C#2", ["G#3", "C#4", "E4", "B4"])
+	chords = [A, E, Fm, D, A, E, D, D, Bm, Cm, D, E, Fm, Cm, D, E]
+	melody = [
+		[(0, .5, "E5"), (.5, .5, "C#5"), (1, .5, "E5"), (1.5, 1, "A5"), (3, .5, "G#5"), (3.5, .5, "F#5")],
+		[(0, 1.5, "G#5"), (1.5, .5, "E5"), (2, 1, "B4"), (3, .5, "E5"), (3.5, .5, "F#5")],
+		[(0, 1, "A5"), (1, .5, "G#5"), (1.5, .5, "F#5"), (2, 1, "E5"), (3, 1, "C#5")],
+		[(0, 1.5, "D5"), (1.5, .5, "E5"), (2, 2, "F#5")],
+		[(0, .5, "E5"), (.5, .5, "C#5"), (1, .5, "E5"), (1.5, 1, "A5"), (3, .5, "B5"), (3.5, .5, "C#6")],
+		[(0, 1, "B5"), (1, 1, "G#5"), (2, .5, "E5"), (2.5, .5, "F#5"), (3, 1, "G#5")],
+		[(0, 1.5, "A5"), (1.5, .5, "F#5"), (2, 1, "D5"), (3, 1, "E5")],
+		[(0, 2, "F#5"), (2, .5, "E5"), (2.5, .5, "D5"), (3, 1, "C#5")],
+		[(0, .5, "D5"), (.5, .5, "F#5"), (1, 1, "B5"), (2, .5, "A5"), (2.5, .5, "F#5"), (3, 1, "D5")],
+		[(0, .5, "E5"), (.5, .5, "G#5"), (1, 1, "C#6"), (2, 1, "B5"), (3, 1, "G#5")],
+		[(0, 1, "A5"), (1, .5, "F#5"), (1.5, .5, "A5"), (2, 1.5, "D6"), (3.5, .5, "C#6")],
+		[(0, 1.5, "B5"), (1.5, .5, "G#5"), (2, 2, "E5")],
+		[(0, .5, "C#6"), (.5, .5, "B5"), (1, .5, "A5"), (1.5, .5, "F#5"), (2, 1, "A5"), (3, 1, "C#6")],
+		[(0, 1.5, "B5"), (1.5, .5, "G#5"), (2, 1, "E5"), (3, 1, "G#5")],
+		[(0, 1, "F#5"), (1, 1, "A5"), (2, 1, "D6"), (3, 1, "C#6")],
+		[(0, 1.5, "B5"), (1.5, .5, "G#5"), (2, 1, "E5"), (3, .5, "D5"), (3.5, .5, "E5")],
+	]
+	for bar, (root, voicing) in enumerate(chords):
+		r = hz(root)
+		for b in range(4):
+			s.add("bass", s.t(bar, b), synbass(r if b != 2 else r * 2.0, 0.85 * s.spb, 0.8, cut0=1400.0, cut1=260.0, fdec=0.12), human=0.0)
+			for note in voicing:
+				s.add("chords", s.t(bar, b), pad(hz(note), 0.9 * s.spb, 0.55, cut=3200.0, attack=0.01, release=0.12, detune=0.009), human=0.0)
+		comp = [0.5, 1.5, 2.0, 3.0] if bar % 2 == 0 else [0.0, 1.0, 2.5, 3.5]
+		for h in comp:
+			for v, note in enumerate(voicing[:3]):
+				s.add("guitar", s.t(bar, h) + v * 0.01, pluck(hz(note), 0.35, 0.5, bright=0.55, decay=0.996))
+		if bar >= 8:
+			tones = [hz(x) * 2.0 for x in voicing]
+			for k in range(8):
+				s.add("sparkle", s.t(bar, k * 0.5), bell(tones[k % len(tones)], 0.45, length=0.3), human=0.0)
+	for bar, notes in enumerate(melody):
+		for b, d, note in notes:
+			s.add("lead", s.t(bar, b), bell(hz(note), 0.7, length=0.5), human=0.0)
+			s.add("lead", s.t(bar, b), lead(hz(note), d * s.spb * 0.85, 0.35, duty=0.5, cut=2600.0), human=0.0)
+	for bar in range(16):
+		for b in range(4):
+			s.add("kick", s.t(bar, b), kick(0.95, punch=100.0, base=48.0, length=0.24), human=0.0)
+		for b in (1, 3):
+			s.add("clap", s.t(bar, b), clap(0.8), human=0.0)
+		for e in range(8):
+			s.add("perc", s.t(bar, e * 0.5 + 0.0), shaker(0.4 if e % 2 else 0.22))
+		for b in ([0, 1.5, 3] if bar % 2 == 0 else [1, 2]):
+			s.add("perc", s.t(bar, b), rim(0.35, 1500.0))
+	return s.render(echo_beats=0.75, room=0.8)
+
+# ---------------------------------------------------------------- music: chapter 2 boss (electronic rock + alarms)
+
+
+def gear(vel=0.6):
+	return seq((0, metal([620.0, 1310.0, 2290.0], 0.07, vel), 0.8), (0, noise_burst(0.03, hp=2000, dec=0.01), 0.4))
+
+
+def song_boss2():
+	s = Song(150, 16)
+	s.bus("kick", gain=0.95, rev=0.0)
+	s.bus("snare", pan=0.05, gain=0.55, rev=0.18)
+	s.bus("hat", pan=0.35, gain=0.2, rev=0.05)
+	s.bus("gear", pan=-0.4, gain=0.3, rev=0.2)
+	s.bus("bass", gain=0.55, rev=0.0, drive=2.5)
+	s.bus("guitar", pan=-0.25, gain=0.32, rev=0.15, drive=4.0)
+	s.bus("guitar2", pan=0.25, gain=0.32, rev=0.15, drive=4.0)
+	s.bus("lead", pan=0.05, gain=0.3, rev=0.25, echo=0.25)
+	s.bus("alarm", pan=0.3, gain=0.18, rev=0.35)
+	s.bus("crash", pan=0.2, gain=0.28, rev=0.25)
+	chords = ["E2", "E2", "C2", "D2", "E2", "E2", "A1", "B1", "C2", "D2", "E2", "G2", "C2", "D2", "B1", "B1"]
+	melody = [
+		[(0, 1, "E5"), (1, .5, "G5"), (1.5, .5, "F#5"), (2, 1, "E5"), (3, 1, "B4")],
+		[(0, 1.5, "D5"), (1.5, .5, "E5"), (2, 2, "B4")],
+		[(0, 1, "C5"), (1, .5, "E5"), (1.5, .5, "G5"), (2, 1, "A5"), (3, 1, "G5")],
+		[(0, 1.5, "F#5"), (1.5, .5, "E5"), (2, 1, "D5"), (3, 1, "F#5")],
+		[(0, 1, "B5"), (1, .5, "A5"), (1.5, .5, "G5"), (2, 1, "E5"), (3, 1, "G5")],
+		[(0, 1.5, "F#5"), (1.5, .5, "G5"), (2, 2, "E5")],
+		[(0, 1, "A5"), (1, 1, "C6"), (2, 1, "B5"), (3, 1, "A5")],
+		[(0, 2, "B5"), (2, 1, "A5"), (3, 1, "F#5")],
+		[(0, 1, "G5"), (1, 1, "E5"), (2, 1, "C5"), (3, 1, "E5")],
+		[(0, 1, "F#5"), (1, 1, "A5"), (2, 2, "D6")],
+		[(0, 1, "E6"), (1, .5, "D6"), (1.5, .5, "B5"), (2, 1, "G5"), (3, 1, "E5")],
+		[(0, 1, "D6"), (1, 1, "B5"), (2, 2, "G5")],
+		[(0, 1, "E5"), (1, 1, "G5"), (2, 1, "C6"), (3, 1, "E6")],
+		[(0, 1.5, "D6"), (1.5, .5, "C6"), (2, 1, "A5"), (3, 1, "F#5")],
+		[(0, 1, "D#5"), (1, 1, "F#5"), (2, 1, "B5"), (3, 1, "A5")],
+		[(0, 2, "B5"), (2, 1, "F#5"), (3, 1, "D#5")],
+	]
+	for bar, root in enumerate(chords):
+		r = hz(root)
+		for e in range(8):
+			s.add("bass", s.t(bar, e * 0.5), synbass(r, 0.45 * s.spb, 0.9, cut0=1500.0, cut1=300.0, fdec=0.05), human=0.0)
+			chug = 0.42 * s.spb if e % 4 != 3 else 0.9 * s.spb
+			for mult in (2.0, 3.0, 4.0):
+				s.add("guitar", s.t(bar, e * 0.5), lead(r * mult, chug, 0.55, cut=2400.0, vib=0.0, saw=True), human=0.002)
+				s.add("guitar2", s.t(bar, e * 0.5) + 0.012, lead(r * mult * 1.003, chug, 0.5, cut=2200.0, vib=0.0, saw=True), human=0.002)
+		if bar in (0, 8):
+			s.add("crash", s.t(bar, 0), crash(0.8, 1.6))
+			for k in range(4):
+				s.add("alarm", s.t(bar, k), lead(988.0 if k % 2 == 0 else 784.0, 0.9 * s.spb, 0.6, duty=0.5, cut=3000.0, vib=0.0), human=0.0)
+	for bar, notes in enumerate(melody):
+		for b, d, note in notes:
+			s.add("lead", s.t(bar, b), lead(hz(note), d * s.spb * 0.92, 0.7, cut=3600.0, saw=True), human=0.0)
+	for bar in range(16):
+		for b in (0, 1.5, 2, 3.5) if bar % 4 != 3 else (0, 0.5, 1.5, 2, 2.5, 3, 3.5):
+			s.add("kick", s.t(bar, b), kick(1.0, punch=120.0, base=52.0, length=0.2), human=0.0)
+		for b in (1, 3):
+			s.add("snare", s.t(bar, b), snare(0.95, tone=200.0, snap=0.15), human=0.0)
+		for k in range(8):
+			s.add("hat", s.t(bar, k * 0.5), hat(0.5 if k % 2 == 0 else 0.3, 0.03), human=0.0)
+		for b in (0.75, 2.75):
+			s.add("gear", s.t(bar, b), gear(0.5), human=0.0)
+		if bar == 15:
+			for k in range(8):
+				s.add("snare", s.t(bar, 2 + k * 0.25), snare(0.3 + 0.08 * k), human=0.0)
+	return s.render(echo_beats=0.5, room=0.75)
+
 # ---------------------------------------------------------------- sound effects
 
 
@@ -968,6 +1109,62 @@ def sfx_all():
 	mixin(lose, sweep_tone(110, 55, 0.4, dec=0.15), at(0.72), 0.4)
 	S["lose"] = lose
 	S["star"] = seq((0, chime(hz("C6"), 0.7, 0.55), 0.8), (0.04, chime(hz("G6"), 0.5, 0.5), 0.5), (0, noise_burst(0.3, hp=7500, att=0.02, dec=0.1), 0.12))
+	# ---- 第 02 章
+	S["shot_ice"] = seq((0, sweep_tone(3000, 1700, 0.07, dec=0.035), 0.6), (0, metal([4200, 6100], 0.05, 0.5), 0.5), (0, noise_burst(0.08, hp=5000, dec=0.03), 0.3))
+	crackles = [(rng.uniform(0, 0.35), metal([rng.uniform(3500, 7000)], 0.03, 0.5), rng.uniform(0.2, 0.5)) for _ in range(9)]
+	S["freeze"] = seq((0, sweep_tone(320, 140, 0.25, dec=0.1), 0.6), (0, noise_burst(0.4, hp=4000, att=0.01, dec=0.12), 0.45), *crackles)
+	S["whisk"] = seq((0, noise_burst(0.26, lp=900, lp_end=3200, att=0.06, dec=0.08), 0.8), (0.02, sweep_tone(160, 110, 0.1, dec=0.05), 0.4))
+	S["aim"] = seq((0, sweep_tone(2000, 2000, 0.04, dec=0.02), 0.5), (0.09, sweep_tone(2400, 2400, 0.05, dec=0.025), 0.5))
+	S["flash"] = seq((0, noise_burst(0.015, hp=2000, dec=0.004), 0.9), (0.02, noise_burst(0.02, hp=3000, dec=0.006), 0.6),
+		(0.03, sweep_tone(2500, 7000, 0.22, att=0.01, dec=0.12), 0.35), (0.03, noise_burst(0.25, hp=6000, dec=0.08), 0.35))
+	buzz = [0.0] * at(0.6)
+	for i in range(len(buzz)):
+		t = i / SR
+		buzz[i] = (2.0 * ((180.0 * t) % 1.0) - 1.0) * (0.6 + 0.4 * sin(TAU * 32.0 * t)) * min(1.0, t / 0.05) * min(1.0, (0.6 - t) / 0.1)
+	S["drone"] = lowpass(buzz, 1800)
+	S["stamp"] = seq((0, sweep_tone(95, 45, 0.25, dec=0.1), 1.0), (0, noise_burst(0.08, lp=1500, dec=0.03), 0.8),
+		(0.18, sweep_tone(1500, 1500, 0.05, dec=0.03), 0.3), (0.26, sweep_tone(1900, 1900, 0.06, dec=0.03), 0.3))
+	gated = noise_burst(0.35, hp=1200, dec=0.15)
+	for i in range(len(gated)):
+		if (i // at(0.018)) % 2:
+			gated[i] *= 0.15
+	S["emp"] = seq((0, gated, 0.7), (0, lowpass(sweep_tone(900, 90, 0.4, dec=0.2, shape="saw"), 2500), 0.6), (0.02, metal([2800, 4100], 0.08, 0.4), 0.4))
+	S["overclock"] = seq((0, lowpass(sweep_tone(200, 900, 0.4, att=0.02, dec=0.6, shape="saw"), 3000), 0.5), (0.38, chime(1760, 0.6, 0.4), 0.7), (0.42, chime(2637, 0.4, 0.3), 0.4))
+	S["reverse"] = seq((0, sweep_tone(140, 80, 0.12, dec=0.06), 0.8), (0.02, noise_burst(0.12, hp=1500, dec=0.03), 0.5),
+		(0.08, noise_burst(0.45, lp=500, lp_end=3500, att=0.08, dec=0.2), 0.6), (0.35, sweep_tone(880, 880, 0.07, dec=0.04), 0.35), (0.45, sweep_tone(1320, 1320, 0.09, dec=0.05), 0.35))
+	rip = noise_burst(0.3, lp=4000, hp=600, att=0.01, dec=0.2)
+	for i in range(len(rip)):
+		rip[i] *= 0.4 + 0.6 * rng.random()
+	S["umbrella_break"] = seq((0, rip, 0.8), (0.12, sweep_tone(300, 120, 0.06, dec=0.02), 0.6), (0.14, noise_burst(0.02, hp=1500, dec=0.006), 0.6))
+	S["repair"] = seq((0, metal([1850, 3900], 0.06, 0.6), 0.7), (0.14, metal([2100, 4300], 0.06, 0.6), 0.7), (0.28, chime(1568, 0.5, 0.4), 0.5), (0.34, chime(2093, 0.5, 0.45), 0.5))
+	S["blackout"] = seq((0, noise_burst(0.02, hp=1500, dec=0.006), 0.8), (0.02, lowpass(sweep_tone(420, 35, 0.9, att=0.01, dec=0.9, shape="saw"), 1600), 0.8), (0.02, sweep_tone(60, 30, 0.6, dec=0.4), 0.5))
+	riser = sweep_tone(80, 320, 2.2, att=1.0, dec=10.0, shape="saw", vib=0.04, vib_hz=9)
+	S["charge"] = seq((0, lowpass(riser, 1400), 0.6), (0, noise_burst(2.2, lp=400, lp_end=4000, att=1.6, dec=10.0), 0.35))
+	S["interrupt"] = seq((0, metal([1240, 2730, 4190, 5650], 0.3, 0.6), 0.7), (0, noise_burst(0.3, hp=2500, dec=0.1), 0.5), (0.05, sweep_tone(700, 180, 0.3, dec=0.15), 0.5), (0.1, chime(2093, 0.5, 0.5), 0.5))
+	S["blast"] = seq((0, sweep_tone(70, 28, 0.9, dec=0.4), 1.0), (0, noise_burst(1.0, lp=2500, lp_end=200, dec=0.4), 0.9), (0, crash(0.6, 1.0), 0.5))
+	S["leak"] = seq((0, sweep_tone(659, 659, 0.12, dec=0.08), 0.6), (0.13, sweep_tone(523, 500, 0.22, dec=0.12), 0.6), (0.13, sweep_tone(90, 60, 0.12, dec=0.05), 0.4))
+	tear = noise_burst(0.28, lp=5500, hp=900, att=0.005, dec=0.15)
+	for i in range(len(tear)):
+		tear[i] *= 0.25 + 0.75 * abs(sin(i / SR * 260.0 + rng.random()))
+	S["tear"] = tear
+	S["coins"] = seq(*[(k * 0.05 + rng.uniform(0, 0.02), metal([rng.uniform(2600, 4800), rng.uniform(5000, 6800)], 0.07, 0.5), 0.6) for k in range(7)])
+	S["income_freeze"] = seq((0, noise_burst(0.015, hp=1500, dec=0.005), 0.8), (0.03, lowpass(sweep_tone(220, 200, 0.35, dec=0.3, shape="square"), 1200), 0.4), (0.12, *crackles[0][1:]))
+	slurp = noise_burst(0.35, lp=300, lp_end=1600, att=0.05, dec=0.2)
+	S["absorb"] = seq((0, slurp, 0.8), (0.12, sweep_tone(300, 700, 0.06, dec=0.03), 0.4), (0.24, sweep_tone(350, 800, 0.06, dec=0.03), 0.4))
+	# ---- 第 02 章扩展：新店员与新来客
+	S["conch"] = seq((0, lowpass(sweep_tone(220, 260, 0.35, att=0.04, dec=0.4, shape="saw", vib=0.02, vib_hz=6), 1400), 0.6),
+		(0, sweep_tone(440, 520, 0.35, att=0.04, dec=0.4, vib=0.02, vib_hz=6), 0.3), (0.05, noise_burst(0.3, lp=1800, att=0.05, dec=0.15), 0.25))
+	S["fireball"] = seq((0, noise_burst(0.28, lp=600, lp_end=2400, att=0.02, dec=0.12), 0.8), (0, sweep_tone(180, 90, 0.2, dec=0.1), 0.5),
+		*[(rng.uniform(0.02, 0.2), noise_burst(0.008, hp=3000, dec=0.003), 0.4) for _ in range(6)])
+	S["brush"] = seq((0, noise_burst(0.18, lp=2500, lp_end=900, hp=400, att=0.03, dec=0.08), 0.8), (0.05, sweep_tone(900, 600, 0.08, dec=0.04), 0.25))
+	S["wool"] = seq((0, sweep_tone(300, 160, 0.12, dec=0.05), 0.7), (0, noise_burst(0.1, lp=1200, dec=0.04), 0.5), (0.02, sweep_tone(700, 1100, 0.05, dec=0.02), 0.25))
+	S["zap"] = lowpass(seq((0, noise_burst(0.06, hp=2500, dec=0.02), 0.6), (0, sweep_tone(2400, 900, 0.06, dec=0.03, shape="square"), 0.3)), 6000)
+	S["paint"] = seq((0, noise_burst(0.3, lp=900, lp_end=2600, att=0.05, dec=0.15), 0.7), (0.1, chime(1568, 0.4, 0.3), 0.4), (0.16, chime(2093, 0.35, 0.3), 0.35))
+	S["think"] = seq((0, lowpass(sweep_tone(110, 440, 1.6, att=0.6, dec=5.0, shape="saw", vib=0.03, vib_hz=7), 1500), 0.5),
+		(0.2, chime(1318.5, 0.3, 0.4), 0.3), (0.6, chime(1760, 0.3, 0.4), 0.3), (1.0, chime(2349, 0.3, 0.4), 0.3))
+	S["beam"] = seq((0, lowpass(sweep_tone(900, 180, 0.6, att=0.005, dec=0.3, shape="saw"), 3500), 0.6), (0, noise_burst(0.5, hp=1500, dec=0.2), 0.5),
+		(0, sweep_tone(80, 40, 0.4, dec=0.2), 0.7))
+	S["steal"] = seq((0, sweep_tone(1200, 1800, 0.06, dec=0.03), 0.4), (0.07, noise_burst(0.08, lp=3000, dec=0.03), 0.5), (0.1, sweep_tone(600, 300, 0.1, dec=0.05), 0.3))
 	return S
 
 # ---------------------------------------------------------------- main
@@ -992,7 +1189,11 @@ def main():
 			stats("sfx_" + name, data)
 	if what in ("all", "music"):
 		tmp = tempfile.mkdtemp()
-		for name, fn in (("music_menu", song_menu), ("music_battle", song_battle), ("music_boss", song_boss)):
+		songs = (("music_menu", song_menu), ("music_battle", song_battle), ("music_boss", song_boss), ("music_terrace", song_terrace), ("music_boss2", song_boss2))
+		only = os.environ.get("ONLY")
+		for name, fn in songs:
+			if only and name not in only.split(","):
+				continue
 			L, R = fn()
 			stats(name, L, R)
 			wav_path = os.path.join(tmp, name + ".wav")

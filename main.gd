@@ -28,28 +28,48 @@ const PLUM := Color("#2a1528")
 const TEXT := Color("#fff8ef")
 const MUTED := Color("#ecd5c8")
 const INK_SOFT := Color("#8b6757")
-const ACCENTS := [Color("#b58bff"), Color("#ffb03f"), Color("#45b4ff"), Color("#ff8758"), Color("#9a86ff"), Color("#6d8cff"), Color("#2fd1a3"), Color("#ffc23d")]
+const ACCENTS := [Color("#b58bff"), Color("#ffb03f"), Color("#45b4ff"), Color("#ff8758"), Color("#9a86ff"), Color("#6d8cff"), Color("#2fd1a3"), Color("#ffc23d"),
+	Color("#ff9f43"), Color("#c98b5a"), Color("#3fcfc0"), Color("#ff6b3d"), Color("#6c7cff"), Color("#f5b82e"), Color("#d4a373"), Color("#b48cff"),
+	Color("#2f6bff"), Color("#c7a6ff"), Color("#ff9a6a"), Color("#a99cff"), Color("#7d8dff")]
 const ARENAS := {"arena": ["门口", Color("#ff8db3")], "hall": ["主厅", Color("#e0965a")], "night": ["夜班", Color("#8a7bff")],
-	"kitchen": ["后厨", Color("#ff7b5c")], "core": ["核心区", Color("#2fc4b2")]}
+	"kitchen": ["后厨", Color("#ff7b5c")], "core": ["核心区", Color("#2fc4b2")], "terrace": ["露台", Color("#f0a13a")]}
 const ENEMY_TIPS := {"C": "普通来客", "R": "跑得很快", "B": "举着箱盾", "A": "让同伴加速", "S": "潜行，躲开锁定",
-	"T": "召来职员", "D": "封住炮台", "I": "潜行又耐打", "X": "三阶段 Boss"}
+	"T": "召来职员", "D": "封住炮台", "I": "潜行又耐打", "X": "三阶段 Boss", "Y": "飞行，不会被挡", "P": "闪光致盲店员",
+	"W": "重甲，吃残渣回血", "H": "倒下时瘫痪店员", "V": "三阶段 Boss", "Q": "成群结队", "K": "偷走路上的算力", "M": "飞行母舰，空投无人机"}
+const ENEMY_ORDER := ["V", "M", "X", "T", "D", "I", "W", "K", "P", "H", "B", "A", "S", "Y", "R", "Q", "C"]
+const BOSS_PHASES := {"X": ["", "金牌接管", "封条封场", "影子加班"], "V": ["", "合规突击检查", "恶意商业收购", "狂暴清算强拆"], "M": ["", "空投外卖"]}
+# 这些图片可以以后再补；文件不存在时游戏会画占位图。
+const OPTIONAL_ART := ["terrace", "drone", "influencer", "sweeper", "hacker", "victor", "victor2", "victor3", "troll", "scalper", "carrier", "mistral_shot", "doubao_fx",
+	"hailuo_shot", "spark_shot", "ernie_shot", "llama_shot", "paint_wall", "r1_beam"]
 const PAGE_SIZE := 6
-const MAX_LOADOUT := 5
 const PHASE_NAMES := ["", "金牌接管", "封条封场", "影子加班"]
-const SHOT_ART := {0: "gpt_shot", 2: "deepseek_shot", 4: "gemini_shot", 5: "qwen_shot", 7: "grok_shot"}
-const HIT_ART := {0: "gpt_hit", 2: "deepseek_hit", 4: "gpt_hit", 5: "qwen_shot", 7: "grok_hit", 9: "warning_fx", 10: "kimi_fx"}
-const SHOT_SFX := {0: "shot_gpt", 2: "shot_water", 4: "shot_gemini", 5: "shot_qwen", 7: "shot_grok"}
+const SHOT_ART := {0: "gpt_shot", 2: "deepseek_shot", 4: "gemini_shot", 5: "qwen_shot", 7: "grok_shot", 8: "mistral_shot", 10: "hailuo_shot",
+	11: "spark_shot", 12: "ernie_shot", 14: "llama_shot", 17: "gpt_shot", 19: "gemini_shot", 20: "qwen_shot"}
+const SMALL_SHOTS := [17, 19, 20]
+# impacts 的 kind 就是卡牌编号；9、10 被第 01 章的封印和光环占用，所以新卡的命中特效从这里查。
+const HIT_ART := {0: "gpt_hit", 2: "deepseek_hit", 4: "gpt_hit", 5: "qwen_shot", 7: "grok_hit", 8: "mistral_shot", 9: "warning_fx", 10: "kimi_fx",
+	11: "spark_shot", 12: "ernie_shot", 14: "llama_shot", 17: "gpt_hit", 20: "qwen_shot", 110: "hailuo_shot"}
+const SHOT_SFX := {0: "shot_gpt", 2: "shot_water", 4: "shot_gemini", 5: "shot_qwen", 7: "shot_grok", 8: "shot_ice", 9: "whisk", 10: "conch",
+	11: "fireball", 12: "brush", 14: "wool", 15: "paint", 17: "shot_gpt", 19: "zap", 20: "shot_qwen"}
 # 每个音效的基础音量（dB），播放时还可以再加偏移。
 const SFX_DB := {"click": -11.0, "select": -9.0, "deny": -10.0, "page": -8.0, "toggle": -9.0,
 	"deploy": -5.0, "remove": -8.0, "collect": -6.0, "produce": -13.0, "supply": -6.0,
 	"shot_gpt": -18.0, "shot_water": -17.0, "shot_gemini": -19.0, "shot_qwen": -16.0, "shot_grok": -11.0, "scan": -13.0,
 	"hit": -19.0, "hit_water": -18.0, "hit_shield": -16.0, "shield_break": -7.0, "boom": -8.0, "block": -15.0, "bite": -19.0,
 	"kill": -9.0, "lost": -6.0, "wave": -5.0, "last_wave": -4.0, "boss_phase": -3.0, "warning": -12.0, "seal": -7.0,
-	"megaphone": -8.0, "hurry": -10.0, "reveal": -9.0, "sweep": -5.0, "win": -3.0, "lose": -4.0, "star": -6.0}
+	"megaphone": -8.0, "hurry": -10.0, "reveal": -9.0, "sweep": -5.0, "win": -3.0, "lose": -4.0, "star": -6.0,
+	"shot_ice": -15.0, "freeze": -8.0, "whisk": -15.0, "aim": -11.0, "flash": -6.0, "drone": -14.0, "stamp": -5.0,
+	"emp": -7.0, "overclock": -6.0, "reverse": -6.0, "umbrella_break": -6.0, "repair": -7.0, "blackout": -4.0,
+	"charge": -5.0, "interrupt": -4.0, "blast": -3.0, "leak": -6.0, "tear": -7.0, "coins": -8.0, "income_freeze": -6.0, "absorb": -9.0,
+	"conch": -15.0, "fireball": -15.0, "brush": -14.0, "wool": -14.0, "zap": -20.0, "paint": -9.0, "think": -10.0, "beam": -5.0, "steal": -8.0}
 const MUSIC_DB := -9.0
 const PETAL := [Vector2(0, -1), Vector2(0.55, -0.62), Vector2(0.62, 0.08), Vector2(0.32, 0.82), Vector2(0, 0.56),
 	Vector2(-0.32, 0.82), Vector2(-0.62, 0.08), Vector2(-0.55, -0.62)]
 const MID := 1
+# 第 02 章每关的推荐阵容（6 位，和 tools/balance_sim.gd 里验证过的一致）。
+const CHAPTER_TWO_LINEUPS := [[0, 1, 2, 8, 4, 17], [0, 1, 8, 9, 4, 17], [0, 1, 8, 10, 9, 17], [0, 1, 8, 9, 5, 19],
+	[0, 1, 8, 9, 11, 18], [0, 1, 8, 10, 11, 12], [0, 1, 8, 9, 16, 17], [0, 13, 8, 10, 9, 17],
+	[0, 1, 8, 14, 5, 9], [0, 1, 8, 15, 9, 12], [0, 13, 8, 9, 15, 11], [0, 1, 8, 9, 16, 12]]
 const END := 2
 enum {TITLE, SELECT, BRIEF, PLAY, RESULT}
 
@@ -110,6 +130,10 @@ var stars_played := 0
 var showcase := 0
 var showcase_at := 0.0
 var wave_marks: Array[float] = []
+var chapter_view := 1
+var core_hit_at := -10.0
+var brief_focus := -1
+var beams: Array[Dictionary] = []
 
 func _ready() -> void:
 	rng.seed = 1107
@@ -125,8 +149,10 @@ func _ready() -> void:
 	for card in Campaign.CARDS:
 		keys.append(card.key)
 		keys.append(card.key + "_act")
-	for key in keys:
-		art[key] = load("res://art/%s.png" % key)
+	for key in keys + OPTIONAL_ART:
+		var path := "res://art/%s.png" % key
+		if ResourceLoader.exists(path):
+			art[key] = load(path)
 	stars.resize(Campaign.levels.size())
 	stars.fill(0)
 	loadout.resize(Campaign.CARDS.size())
@@ -154,7 +180,7 @@ func setup_audio() -> void:
 	read_audio_pref()
 	if DisplayServer.get_name() == "headless":
 		return
-	for key in ["menu", "battle", "boss"]:
+	for key in ["menu", "battle", "boss", "terrace", "boss2"]:
 		var stream: AudioStreamOggVorbis = load("res://art/audio/music_%s.ogg" % key)
 		stream.loop = true
 		tracks[key] = stream
@@ -205,7 +231,9 @@ func wanted_music() -> String:
 		return ""
 	match state:
 		PLAY:
-			return "boss" if stage == Campaign.levels.size() - 1 else "battle"
+			if Campaign.chapter(stage) == 2:
+				return "boss2" if battle != null and battle.boss_kind == "V" else "terrace"
+			return "boss" if stage == 21 else "battle"
 		RESULT:
 			return "menu" if ui_time - result_at > 3.6 else ""
 	return "menu"
@@ -258,16 +286,14 @@ func read_progress(path: String) -> Array:
 	if not FileAccess.file_exists(path):
 		return []
 	var lines := FileAccess.get_file_as_string(path).strip_edges().split("\n")
-	if lines.size() not in [5, Campaign.levels.size() + 1] or lines[0].strip_edges() != "AI-CAFE/1":
+	if lines.size() < 2 or lines.size() > Campaign.levels.size() + 1 or lines[0].strip_edges() != "AI-CAFE/1":
 		return []
 	var values := []
-	var gap := false
 	for i in range(1, lines.size()):
 		var line := lines[i].strip_edges()
-		if line not in ["0", "1", "2", "3"] or (gap and line != "0"):
+		if line not in ["0", "1", "2", "3"]:
 			return []
 		values.append(line.to_int())
-		gap = gap or line == "0"
 	while values.size() < Campaign.levels.size():
 		values.append(0)
 	return values
@@ -292,9 +318,24 @@ func record_win(score: int) -> bool:
 	stars = next
 	return true
 
-func unlocked() -> int:
-	var first := stars.find(0)
-	return Campaign.levels.size() - 1 if first == -1 else first
+# 第 01 章逐关解锁（1-20EX 在 1-20 之后）；第 02 章在通关 1-20 后开放。
+func is_unlocked(i: int) -> bool:
+	if i <= 0:
+		return true
+	if i == Campaign.CHAPTER_STARTS[1]:
+		return stars[20] > 0
+	return stars[i - 1] > 0
+
+# 最靠后的一关「已解锁但还没通关」的关卡；全部通关时返回最后一关。
+func latest() -> int:
+	var best := -1
+	for i in range(stars.size()):
+		if is_unlocked(i) and stars[i] == 0:
+			best = i
+	return stars.size() - 1 if best == -1 else best
+
+func chapter_pages(number: int) -> int:
+	return ceili(float(Campaign.chapter_range(number).size()) / PAGE_SIZE)
 
 func total_stars() -> int:
 	var sum := 0
@@ -308,9 +349,20 @@ func open_title() -> void:
 
 func open_map(use_latest: bool = false) -> void:
 	if use_latest:
-		page = floori(float(unlocked()) / PAGE_SIZE)
+		focus_stage(latest())
 	state = SELECT
 	paused = false
+
+func focus_stage(id: int) -> void:
+	chapter_view = Campaign.chapter(id)
+	page = floori(float(id - Campaign.CHAPTER_STARTS[chapter_view - 1]) / PAGE_SIZE)
+
+func open_chapter(number: int) -> void:
+	if number == 2 and not is_unlocked(Campaign.CHAPTER_STARTS[1]):
+		notice("通关 1-20 后开放第 02 章。")
+		return
+	chapter_view = number
+	page = 0
 
 func equipped() -> Array:
 	var result := []
@@ -321,9 +373,11 @@ func equipped() -> Array:
 
 func open_stage(id: int) -> void:
 	stage = id
-	page = floori(float(id) / PAGE_SIZE)
+	focus_stage(id)
 	var suggested := [0, 1, 2, 3, 4]
-	if id == 7 or id == 8:
+	if id >= Campaign.CHAPTER_STARTS[1]:
+		suggested = CHAPTER_TWO_LINEUPS[id - Campaign.CHAPTER_STARTS[1]]
+	elif id == 7 or id == 8:
 		suggested = [0, 1, 2, 4, 5]
 	elif id >= 9:
 		suggested = [0, 1, 4, 5, 6]
@@ -354,6 +408,7 @@ func start_battle() -> void:
 	floaters.clear()
 	flyers.clear()
 	ghosts.clear()
+	beams.clear()
 	wave_marks.clear()
 	var spawns: Array = battle.level.spawns
 	for k in range(1, spawns.size()):
@@ -373,6 +428,8 @@ func notice(message: String, bad: bool = true) -> void:
 
 func finish() -> void:
 	rating = maxi(1, 3 - battle.robots.count(false))
+	if battle.chapter == 2:
+		rating = 3 if battle.core >= Battle.CORE_MAX and battle.facility_uses > 0 else 2 if battle.core >= 80 else 1
 	save_ok = battle.result != 1 or record_win(rating)
 	state = RESULT
 	result_at = ui_time
@@ -420,13 +477,17 @@ func _input(event: InputEvent) -> void:
 		if state == PLAY:
 			if event.keycode in [KEY_ESCAPE, KEY_SPACE]:
 				go_back()
-			elif not paused and event.keycode >= KEY_1 and event.keycode <= KEY_5:
+			elif not paused and event.keycode >= KEY_1 and event.keycode <= KEY_6:
 				var slot: int = event.keycode - KEY_1
 				var active := equipped()
 				if slot < active.size():
 					choose_card(active[slot])
 			elif not paused and event.keycode == KEY_R:
 				toggle_remove()
+			elif not paused and event.keycode == KEY_Q and battle.charger:
+				toggle_overclock()
+			elif not paused and event.keycode == KEY_E and not battle.conveyor_rows.is_empty():
+				use_reverse()
 		elif event.keycode == KEY_ESCAPE:
 			go_back()
 
@@ -447,6 +508,19 @@ func toggle_remove() -> void:
 	selected = -1 if selected == -2 else -2
 	sfx("select")
 
+func toggle_overclock() -> void:
+	selected = -1 if selected == -3 else -3
+	sfx("select")
+
+func use_reverse() -> void:
+	if battle.reverse_conveyor():
+		drain()
+	elif battle.conveyor_wait() > 0.0:
+		notice("传送带还在冷却。")
+	else:
+		power_deny = ui_time
+		notice("逆流需要 %d 算力。" % Battle.CONVEYOR_COST)
+
 func click(point: Vector2) -> void:
 	for i in range(buttons.size() - 1, -1, -1):
 		if buttons[i][0].has_point(point):
@@ -465,10 +539,39 @@ func click(point: Vector2) -> void:
 			drain()
 			return
 	var cell := board_cell(point)
-	if selected == -1 or cell.x < 0:
+	if cell.x < 0:
 		return
 	if cell in battle.level.blocked:
 		notice("这格暂时封闭。")
+		return
+	if battle.chapter == 2 and selected != -3:
+		if battle.tear_seal(cell.y, cell.x):
+			drain()
+			return
+		if battle.props.has(cell) and selected <= -1:
+			if battle.wreck_at(cell.y, cell.x):
+				if battle.repair(cell.y, cell.x):
+					drain()
+				else:
+					power_deny = ui_time
+					notice("修复遮阳伞需要 %d 算力。" % Battle.REPAIR_COST)
+			return
+	if selected == -1 or cell.x < 0:
+		return
+	if battle.props.has(cell) and selected >= 0:
+		notice("这里摆着遮阳伞。")
+		return
+	if selected == -3:
+		if battle.towers[cell.y][cell.x] == null:
+			notice("点一位店员进行超频。")
+		elif battle.overclock(cell.y, cell.x):
+			selected = -1
+			drain()
+		elif battle.charger_wait() > 0.0:
+			notice("充电桩还在冷却。")
+		else:
+			power_deny = ui_time
+			notice("超频需要 %d 算力。" % Battle.CHARGER_COST)
 		return
 	if selected == -2:
 		if battle.remove(cell.y, cell.x):
@@ -479,8 +582,10 @@ func click(point: Vector2) -> void:
 	elif battle.place(selected, cell.y, cell.x):
 		selected = -1
 		drain()
-	elif battle.towers[cell.y][cell.x] != null:
-		notice("这个格子已有店员。")
+	elif Campaign.is_mini(selected) and battle.minis[cell.y][cell.x] != null:
+		notice("这一格已经有 mini 了。")
+	elif not Campaign.is_mini(selected) and battle.towers[cell.y][cell.x] != null:
+		notice("这个格子已有店员。mini 可以放在店员身上。")
 	elif battle.time < battle.ready_at[selected]:
 		notice("这张卡正在冷却。")
 	else:
@@ -488,12 +593,16 @@ func click(point: Vector2) -> void:
 		notice("算力不足，点击场上的发光算力。")
 
 func change_page(offset: int) -> void:
-	page = clampi(page + offset, 0, floori(float(Campaign.levels.size() - 1) / PAGE_SIZE))
+	page = clampi(page + offset, 0, chapter_pages(chapter_view) - 1)
 
 func set_page(value: int) -> void:
 	page = value
 
 func stage_art(id: int) -> String:
+	match id:
+		27: return "carrier"
+		32: return "sweeper"
+		33: return "victor"
 	var card := Campaign.UNLOCKS.find(id)
 	if card >= 0:
 		return Campaign.CARDS[card].key
@@ -509,10 +618,19 @@ func stage_art(id: int) -> String:
 func toggle_card(index: int) -> void:
 	if loadout[index]:
 		loadout[index] = false
-	elif loadout.count(true) < MAX_LOADOUT:
+	elif loadout.count(true) < max_loadout():
 		loadout[index] = true
 	else:
-		notice("最多上阵五位店员，先取消一张卡片。")
+		notice("最多上阵 %d 位店员，先取消一张卡片。" % max_loadout())
+	brief_focus = index
+
+# 第 02 章可以多带一位（方便带上 mini 附属炮台）。
+func max_loadout() -> int:
+	return 6 if Campaign.chapter(stage) == 2 else 5
+
+# 配卡页显示的卡牌：第 01 章只显示第 01 章的 8 位。
+func visible_cards() -> Array:
+	return range(Campaign.CARDS.size()) if Campaign.chapter(stage) == 2 else range(8)
 
 # ---------------------------------------------------------------- 战斗事件 → 音效与特效
 
@@ -540,7 +658,7 @@ func handle(e: Dictionary) -> void:
 			flyers.append({"from": p + cam, "age": 0.0, "color": GOLD if e.kimi else MINT})
 			burst(p, GOLD if e.kimi else MINT, 7, 130.0, "star", 0.45, 5.5)
 		"produce":
-			sfx("produce", 0.0, 1.0, 0.25)
+			sfx("produce", 0.0, 0.8 if e.get("gold", false) else 1.0, 0.25)
 		"supply":
 			sfx("supply")
 			ui_floater("+%d 补给" % e.amount, Vector2(164, 150), MINT)
@@ -556,11 +674,11 @@ func handle(e: Dictionary) -> void:
 				if stage > 0:
 					banner("第 %d 波来客" % e.wave, SAKURA)
 		"spawn":
-			if e.kind == "X":
+			if e.kind in ["X", "V"]:
 				sfx("boss_phase")
 				shake(0.6)
 				flash_screen(BERRY, 0.35)
-				banner("算力收购机甲 来袭！", BERRY)
+				banner(Campaign.ENEMIES[e.kind].name + " 来袭！", BERRY)
 		"fire":
 			if SHOT_SFX.has(e.card):
 				sfx(SHOT_SFX[e.card], 0.0, 1.0, 0.07)
@@ -607,7 +725,7 @@ func handle(e: Dictionary) -> void:
 				burst(p, GOLD, 30, 380.0, "star", 1.0, 9.0, 160.0)
 				ring(p, GOLD, 240.0, 0.7)
 		"bite":
-			sfx("block" if e.card == 3 else "bite", 0.0, 1.0, 0.12)
+			sfx("block" if e.card in [3, 9, -1] else "bite", 0.0, 1.0, 0.12)
 		"lost":
 			var p := cell_center(e.row, e.col)
 			sfx("lost")
@@ -637,16 +755,153 @@ func handle(e: Dictionary) -> void:
 			sfx("boss_phase")
 			shake(0.7)
 			flash_screen(GOLD, 0.4)
-			banner("机甲阶段 %d · %s" % [e.phase, PHASE_NAMES[e.phase]], GOLD)
+			banner("阶段 %d · %s" % [e.phase, BOSS_PHASES[battle.boss_kind][e.phase]], GOLD)
 			burst(lane_point(e.row, e.x), GOLD, 18, 300.0, "star", 0.8, 8.0)
 		"sweep":
 			sfx("sweep")
 			shake(0.22)
+		"freeze":
+			var p := lane_point(e.row, e.x)
+			sfx("freeze", 0.0, 1.0, 0.1)
+			burst(p, SKY, 10, 170.0, "star", 0.55, 6.0)
+			floater("冻结！", p + Vector2(0, -46), SKY)
+		"aim":
+			sfx("aim", 0.0, 1.0, 0.2)
+		"flash":
+			var p := lane_point(e.row, e.x)
+			sfx("flash", 0.0, 1.0, 0.15)
+			ring(p + Vector2(-26, -10), Color(1, 1, 0.9), 150.0, 0.35)
+			flash_screen(Color(1, 1, 0.95), 0.18)
+			for col in e.cols:
+				var c := cell_center(e.row, col)
+				burst(c + Vector2(0, -20), GOLD, 5, 90.0, "star", 0.6, 5.0)
+				floater("致盲", c + Vector2(0, -40), GOLD)
+		"emp":
+			var c := cell_center(e.row, e.col)
+			sfx("emp")
+			burst(c, SKY, 12, 220.0, "dot", 0.4, 4.0)
+			ring(c, SKY, 70.0, 0.35)
+			floater("瘫痪", c + Vector2(0, -42), SKY)
+		"absorb":
+			var p := lane_point(e.row, e.x)
+			sfx("absorb", 0.0, 1.0, 0.2)
+			burst(p + Vector2(-30, 20), Color("#8a5a3c"), 6, 80.0, "puff", 0.45, 10.0)
+			floater("+60", p + Vector2(0, -50), MINT)
+		"leak":
+			core_hit_at = ui_time
+			sfx("leak", 0.0, 1.0, 0.1)
+			shake(0.15)
+			ui_floater("满意度 -%d" % e.amount, Vector2(112, 236), BERRY)
+		"reverse":
+			sfx("reverse")
+			for row in battle.conveyor_rows:
+				for k in range(4):
+					burst(Vector2(board_x(battle.conveyor_from + k + 0.5), lane_y(row) + row_height() * 0.6), SKY, 2, 120.0, "dot", 0.4, 4.0)
+			floater("逆流！", Vector2(board_x(5.0), lane_y(0) - 6), SKY)
+		"overclock":
+			var c := cell_center(e.row, e.col)
+			sfx("overclock")
+			ring(c, GOLD, 80.0, 0.45)
+			burst(c, GOLD, 10, 200.0, "star", 0.6, 6.0)
+			floater("超频！", c + Vector2(0, -44), GOLD)
+		"umbrella_break":
+			var c := cell_center(e.row, e.col)
+			sfx("umbrella_break")
+			burst(c, SAKURA_PALE, 10, 200.0, "shard", 0.6, 7.0, 500.0)
+			floater("遮阳伞坏了", c + Vector2(0, -44), CREAM)
+		"repair":
+			var c := cell_center(e.row, e.col)
+			sfx("repair")
+			burst(c, MINT, 10, 160.0, "star", 0.6, 6.0)
+			floater("修好了", c + Vector2(0, -44), MINT)
+		"blackout":
+			sfx("blackout")
+			banner("午间高峰跳闸！", BERRY)
+			flash_screen(PLUM, 0.5)
+		"audit":
+			var c := cell_center(e.row, e.col)
+			sfx("stamp")
+			shake(0.15)
+			floater("停业整顿", c + Vector2(0, -46), BERRY)
+		"tap":
+			sfx("click", 2.0, 1.0 + e.taps * 0.15, 0.0)
+			burst(cell_center(e.row, e.col), CREAM, 4, 120.0, "shard", 0.35, 5.0, 300.0)
+		"tear":
+			var c := cell_center(e.row, e.col)
+			sfx("tear")
+			burst(c, BERRY, 10, 220.0, "shard", 0.55, 7.0, 400.0)
+			floater("撕掉了！", c + Vector2(0, -44), MINT)
+		"summon":
+			sfx("drone", 3.0)
+		"income_freeze":
+			sfx("income_freeze")
+			banner("资金流冻结 8 秒", SKY)
+		"trap":
+			var c := cell_center(e.row, e.col)
+			sfx("coins")
+			burst(c, GOLD, 12, 160.0, "dot", 0.6, 4.5, 200.0)
+			floater("高薪挖角", c + Vector2(0, -44), GOLD)
+		"charge":
+			sfx("charge")
+			banner("终极差评蓄力中！快打断！", BERRY)
+		"interrupt":
+			var p := lane_point(e.row, e.x)
+			sfx("interrupt")
+			shake(0.5)
+			flash_screen(MINT, 0.3)
+			burst(p, MINT, 20, 300.0, "star", 0.8, 8.0)
+			floater("打断！", p + Vector2(0, -100), MINT)
+		"blast":
+			var p := lane_point(e.row, e.x)
+			sfx("blast")
+			shake(0.9)
+			flash_screen(BERRY, 0.5)
+			ring(p, BERRY, 600.0, 0.7)
+			floater("终极差评！", p + Vector2(0, -100), BERRY)
+		"think":
+			sfx("think", 0.0, 1.0, 0.2)
+		"beam":
+			beams.append({"row": e.row, "col": e.col, "at": ui_time})
+			sfx("beam")
+			shake(0.2)
+			flash_screen(SKY, 0.18)
+		"paint":
+			var c := cell_center(e.row, e.col)
+			sfx("paint", 0.0, 1.0, 0.2)
+			burst(c, Color("#b48cff"), 8, 140.0, "dot", 0.5, 5.0)
+			burst(c, SAKURA_PALE, 6, 120.0, "star", 0.5, 5.0)
+		"wall_break", "wall_gone":
+			burst(cell_center(e.row, e.col), Color("#c7b3ff"), 8, 120.0, "puff", 0.45, 12.0)
+		"mark":
+			sfx("brush", -4.0, 1.2, 0.2)
+		"ignite":
+			burst(lane_point(e.row, e.x), Color("#ff7a2e"), 5, 90.0, "dot", 0.4, 4.0)
+		"knock":
+			burst(lane_point(e.row, e.x) + Vector2(-20, 10), CREAM, 4, 80.0, "puff", 0.35, 9.0)
+		"steal":
+			var p := lane_point(e.row, e.x)
+			sfx("steal", 0.0, 1.0, 0.15)
+			floater("偷走算力！", p + Vector2(0, -50), GOLD)
+		"refund":
+			var p := lane_point(e.row, e.x)
+			sfx("supply", -3.0)
+			floater("+%d 吐出来了" % e.value, p + Vector2(0, -50), GOLD)
 		"win":
 			sfx("win")
 		"lose":
 			sfx("lose")
 			shake(0.5)
+
+# Boss 当前阶段的立绘：算力收购机甲 boss1~3，维克多 victor / victor2 / victor3。
+func boss_art() -> String:
+	var phase := maxi(1, battle.boss_phase)
+	match battle.boss_kind:
+		"X":
+			return "boss%d" % phase
+		"V":
+			var key := "victor" if phase == 1 else "victor%d" % phase
+			return key if art.has(key) else "victor"
+	return Campaign.ENEMIES[battle.boss_kind].key if battle.boss_kind != "" else "victor"
 
 func cell_center(row: int, col: int) -> Vector2:
 	return Vector2(board_x(col + 0.5), lane_y(row) + row_height() * 0.5)
@@ -691,8 +946,8 @@ func ghost(kind: String, row: int, x: float) -> void:
 	var px := board_x(x)
 	var y := lane_y(row)
 	var h := row_height()
-	if kind == "X":
-		ghosts.append({"key": "boss%d" % maxi(1, battle.boss_phase), "rect": Rect2(px - 81, y - 68, 162, h + 57), "age": 0.0})
+	if kind in ["X", "V"]:
+		ghosts.append({"key": boss_art(), "rect": Rect2(px - 81, y - 68, 162, h + 57), "age": 0.0})
 	else:
 		ghosts.append({"key": Campaign.ENEMIES[kind].key, "rect": Rect2(px - 45, y, 90, h - 10), "age": 0.0})
 
@@ -746,6 +1001,9 @@ func world_step(dt: float) -> void:
 
 func ui_step(delta: float) -> void:
 	flash = maxf(0.0, flash - delta * 2.6)
+	for i in range(beams.size() - 1, -1, -1):
+		if ui_time - float(beams[i].at) > 0.5:
+			beams.remove_at(i)
 	step_parts(ui_parts, delta)
 	if state in [TITLE, SELECT, BRIEF]:
 		update_petals(delta, 30 if state == TITLE else 18)
@@ -921,6 +1179,14 @@ func glyph(icon: String, c: Vector2, s: float, color: Color) -> void:
 			draw_circle(c + Vector2(0.28, 0.05) * s, s * 0.12, CREAM, true, -1.0, true)
 		"check":
 			draw_polyline(PackedVector2Array([c + Vector2(-0.65, 0.0) * s, c + Vector2(-0.15, 0.5) * s, c + Vector2(0.7, -0.5) * s]), color, w, true)
+		"bolt":
+			draw_colored_polygon(PackedVector2Array([c + Vector2(0.15, -0.95) * s, c + Vector2(-0.55, 0.12) * s, c + Vector2(-0.05, 0.12) * s,
+				c + Vector2(-0.2, 0.95) * s, c + Vector2(0.55, -0.15) * s, c + Vector2(0.05, -0.15) * s]), color)
+		"reverse":
+			for k in [-0.45, 0.2]:
+				draw_polyline(PackedVector2Array([c + Vector2(k, -0.6) * s, c + Vector2(k + 0.5, 0) * s, c + Vector2(k, 0.6) * s]), color, w, true)
+		"heart":
+			heart(c, s, color)
 
 func gem(p: Vector2, s: float, color: Color, edge: Color = COCOA) -> void:
 	if s < 0.8:
@@ -980,6 +1246,9 @@ func ellipse(c: Vector2, radii: Vector2, color: Color) -> void:
 	draw_set_transform(cam)
 
 func sprite(key: String, rect: Rect2, tint: Color = Color.WHITE) -> void:
+	if not art.has(key):
+		figure(key, rect, tint)
+		return
 	var image: Texture2D = art[key]
 	var ratio := minf(rect.size.x / image.get_width(), rect.size.y / image.get_height())
 	var size := image.get_size() * ratio
@@ -995,6 +1264,9 @@ func sprite_at(key: String, rect: Rect2, tint: Color, scale: Vector2, pivot: Vec
 
 func effect(key: String, center: Vector2, bounds: Vector2, alpha: float = 1.0) -> void:
 	if alpha <= 0.0:
+		return
+	if not art.has(key):
+		figure(key, Rect2(center - bounds * 0.5, bounds), Color(1, 1, 1, clampf(alpha, 0, 1)))
 		return
 	var texture: Texture2D = art[key]
 	var size := texture.get_size() * minf(bounds.x / texture.get_width(), bounds.y / texture.get_height())
@@ -1109,14 +1381,14 @@ func draw_title() -> void:
 	label("别让资本怪客摸到吧台。", Rect2(94, 442, 620, 36), 23, TEXT, 0, 2, 7, PLUM)
 	candy("开始营业  ›", Rect2(92, 500, 254, 70), open_map.bind(true), 0, 25)
 	candy("退出游戏", Rect2(362, 500, 168, 70), get_tree().quit, 1)
-	label("第 01 章 · 1-0 至 1-20EX   ·   已通关 %d / %d" % [stars.size() - stars.count(0), stars.size()], Rect2(96, 648, 640, 30), 15, MUTED, 0, 1, 5, PLUM)
+	label("第 01 ~ 02 章 · 共 %d 关   ·   已通关 %d / %d" % [stars.size(), stars.size() - stars.count(0), stars.size()], Rect2(96, 648, 640, 30), 15, MUTED, 0, 1, 5, PLUM)
 	round_button("music", Vector2(1150, 60), 28, toggle_music, false, "音乐", not music_on)
 	round_button("sound", Vector2(1218, 60), 28, toggle_sfx, false, "音效", not sfx_on)
 
 # 标题右侧轮流介绍八位店员，也可以点下面的小圆点切换。
 func draw_showcase() -> void:
 	if ui_time - showcase_at > 4.2:
-		showcase = (showcase + 1) % Campaign.CARDS.size()
+		showcase = (showcase + 1) % 17
 		showcase_at = ui_time
 	var card: Dictionary = Campaign.CARDS[showcase]
 	var accent: Color = ACCENTS[showcase]
@@ -1138,8 +1410,8 @@ func draw_showcase() -> void:
 	label(card.name, Rect2(badge.position + Vector2(34, 28), Vector2(130, 38)), 26, COCOA, 0, 2)
 	box(Rect2(badge.position + Vector2(170, 22), Vector2(112, 30)), Color(accent, 0.25), accent.darkened(0.2), 15, 2)
 	label(card.role, Rect2(badge.position + Vector2(170, 22), Vector2(112, 30)), 14, COCOA, MID, 2)
-	for i in range(Campaign.CARDS.size()):
-		var dot := Vector2(990 - (Campaign.CARDS.size() - 1) * 9.0 + i * 18.0, 690)
+	for i in range(17):
+		var dot := Vector2(990 - 16 * 9.0 + i * 18.0, 690)
 		draw_circle(dot, 6.5 if i == showcase else 5.0, COCOA, true, -1.0, true)
 		draw_circle(dot, 4.5 if i == showcase else 3.0, SAKURA if i == showcase else CREAM, true, -1.0, true)
 		buttons.append([Rect2(dot - Vector2(9, 9), Vector2(18, 18)), pick_showcase.bind(i), "click"])
@@ -1158,18 +1430,29 @@ func header(kicker: String, title: String, sub: String, back: Callable) -> void:
 func draw_stages() -> void:
 	backdrop("cafe", 0.62)
 	draw_petals()
-	header("今日菜单", "第 01 章 · 算力咖啡厅", "完成当前关卡即可开启下一场值班。", open_title)
+	header("今日菜单", "第 %02d 章 · %s" % [chapter_view, Campaign.CHAPTER_NAMES[chapter_view - 1]], "", open_title)
+	for n in range(1, Campaign.CHAPTER_STARTS.size() + 1):
+		var tab := Rect2(134 + (n - 1) * 132, 106, 122, 34)
+		var open := is_unlocked(Campaign.CHAPTER_STARTS[n - 1])
+		var on := n == chapter_view
+		box(tab, SAKURA if on else (CREAM if open else Color("#d9c6b6")), COCOA, 17, 3)
+		label("第 %02d 章" % n, tab.grow_individual(-10 if open else -26, 0, -10, 0), 15, TEXT if on else (COCOA if open else INK_SOFT), MID, 2, 4 if on else 0, SAKURA_DEEP)
+		if not open:
+			glyph("lock", tab.position + Vector2(20, 17), 7, INK_SOFT)
+		if not on:
+			buttons.append([tab, open_chapter.bind(n), "page"])
 	var badge := Rect2(950, 38, 276, 84)
 	paper(badge, 20)
 	star(Vector2(992, 80), 20, GOLD, COCOA, 2.5)
 	label("%d / %d" % [total_stars(), stars.size() * 3], Rect2(1022, 46, 190, 40), 28, COCOA, 0, 2)
 	label("已通关 %d / %d 关" % [stars.size() - stars.count(0), stars.size()], Rect2(1023, 84, 190, 26), 14, INK_SOFT, 0, 1)
+	var ids := Campaign.chapter_range(chapter_view)
 	for slot in range(PAGE_SIZE):
-		var i := page * PAGE_SIZE + slot
-		if i >= Campaign.levels.size():
+		var k := page * PAGE_SIZE + slot
+		if k >= ids.size():
 			break
-		draw_stage_card(i, Rect2(56.0 + (slot % 3) * 392.0, 150.0 + floorf(slot / 3.0) * 218.0, 372, 200))
-	var last := floori(float(Campaign.levels.size() - 1) / PAGE_SIZE)
+		draw_stage_card(ids[k], Rect2(56.0 + (slot % 3) * 392.0, 156.0 + floorf(slot / 3.0) * 218.0, 372, 200))
+	var last := chapter_pages(chapter_view) - 1
 	round_button("back", Vector2(530, 648), 28, change_page.bind(-1) if page > 0 else Callable())
 	round_button("next", Vector2(750, 648), 28, change_page.bind(1) if page < last else Callable())
 	for p in range(last + 1):
@@ -1183,9 +1466,9 @@ func draw_stages() -> void:
 
 func draw_stage_card(i: int, rect: Rect2) -> void:
 	var level: Dictionary = Campaign.levels[i]
-	var locked := i > unlocked()
+	var locked := not is_unlocked(i)
 	var arena: Array = ARENAS[level.arena]
-	var boss := i == Campaign.levels.size() - 1
+	var boss: bool = i == 21 or level.get("boss", false)
 	var tone: Color = GOLD_DEEP if boss else arena[1]
 	var fresh: bool = not locked and stars[i] == 0
 	var hot := not locked and rect.has_point(pointer)
@@ -1207,7 +1490,12 @@ func draw_stage_card(i: int, rect: Rect2) -> void:
 	label(Campaign.code(i), chip, 16, TEXT, MID, 2, 3, COCOA)
 	label("挑战" if boss else arena[0], Rect2(r.end.x - 124, r.position.y + 15, 106, 26), 14, INK_SOFT if locked else tone.darkened(0.35), END, 2)
 	label(level.title, Rect2(r.position.x + 158, r.position.y + 48, r.size.x - 172, 34), 24, INK_SOFT if locked else COCOA, 0, 2)
-	label("%d 路 · %s" % [level.rows, "三阶段 Boss" if boss else "%d 波" % level.waves], Rect2(r.position.x + 158, r.position.y + 82, 200, 22), 15, INK_SOFT, 0, 1)
+	var info := "%d 波" % level.waves
+	if i == 21 or i == Campaign.levels.size() - 1:
+		info = "三阶段 Boss"
+	elif boss:
+		info = "%d 波 · 中 Boss" % level.waves
+	label("%d 路 · %s" % [level.rows, info], Rect2(r.position.x + 158, r.position.y + 82, 200, 22), 15, INK_SOFT, 0, 1)
 	for s in range(3):
 		star(Vector2(r.position.x + 172 + s * 32, r.position.y + 124), 12, GOLD if s < stars[i] else Color("#e6d2ba"), COCOA, 2.0)
 	if locked:
@@ -1242,14 +1530,26 @@ func draw_brief() -> void:
 	if stage > 0:
 		var count := Rect2(800, 188, 96, 30)
 		box(count, SAKURA, COCOA, 15, 2)
-		label("%d / %d" % [loadout.count(true), MAX_LOADOUT], count, 16, TEXT, MID, 2, 3, SAKURA_DEEP)
-	for i in range(Campaign.CARDS.size()):
-		draw_badge(i, Rect2(78.0 + (i % 4) * 208.0, 230.0 + floorf(i / 4.0) * 190.0, 194, 176))
+		label("%d / %d" % [loadout.count(true), max_loadout()], count, 16, TEXT, MID, 2, 3, SAKURA_DEEP)
+	var cards := visible_cards()
+	if cards.size() <= 10:
+		var columns := ceili(cards.size() / 2.0)
+		var width := (820.0 - (columns - 1) * 12.0) / columns
+		for k in range(cards.size()):
+			draw_badge(cards[k], Rect2(78.0 + (k % columns) * (width + 12.0), 230.0 + floorf(float(k) / columns) * 190.0, width, 176))
+	else:
+		var columns := 7
+		var width := (820.0 - (columns - 1) * 8.0) / columns
+		for k in range(cards.size()):
+			draw_badge_small(cards[k], Rect2(78.0 + (k % columns) * (width + 8.0), 228.0 + floorf(float(k) / columns) * 121.0, width, 115))
+		var focus: int = brief_focus if brief_focus >= 0 else cards[0]
+		var info: Dictionary = Campaign.CARDS[focus]
+		label("%s · %s：%s" % [info.name, info.role, info.desc], Rect2(80, 590, 820, 24), 14, COCOA, 0, 1)
 	draw_receipt(level, arena, Rect2(936, 174, 288, 444))
 	candy("开始值班  ›", Rect2(970, 634, 254, 66), start_battle, 0, 24)
 	var tips := "点卡片再点格子部署 · 点发光算力收集 · 再点卡片取消"
 	if not mobile:
-		tips += " · 1-5 选卡  R 移除  空格 暂停"
+		tips += " · 1-%d 选卡  R 移除  空格 暂停" % max_loadout()
 	label(tips, Rect2(60, 648, 890, 36), 15, MUTED, 0, 1, 5, PLUM)
 
 func draw_badge(i: int, rect: Rect2) -> void:
@@ -1271,8 +1571,8 @@ func draw_badge(i: int, rect: Rect2) -> void:
 	label("No.%d" % (i + 1), Rect2(r.position + Vector2(12, 6), Vector2(60, 26)), 12, TEXT, 0, 2, 3, Color(COCOA, 0.6))
 	sprite(card.key, Rect2(r.position + Vector2(12, 36), Vector2(r.size.x - 24, 82)), Color.WHITE if available else Color(0.6, 0.55, 0.55, 0.45))
 	label(card.name, Rect2(r.position.x + 8, r.position.y + 118, r.size.x - 16, 26), 19, COCOA if available else INK_SOFT, MID, 2)
-	label(card.role, Rect2(r.position.x + 12, r.position.y + 146, 100, 22), 13, INK_SOFT, 0, 1)
-	var cost := Rect2(r.end.x - 74, r.position.y + 145, 62, 24)
+	label(card.role, Rect2(r.position.x + 10, r.position.y + 146, r.size.x - 84, 22), 13, INK_SOFT, 0, 1)
+	var cost := Rect2(r.end.x - 70, r.position.y + 145, 60, 24)
 	box(cost, Color(MINT, 0.55) if available else Color("#dcc6ae"), COCOA, 12, 2)
 	gem(cost.position + Vector2(13, 12), 7, MINT_DEEP if available else INK_SOFT, Color.TRANSPARENT)
 	label(str(card.cost), Rect2(cost.position + Vector2(22, 0), Vector2(38, 24)), 14, COCOA, MID, 2)
@@ -1285,6 +1585,47 @@ func draw_badge(i: int, rect: Rect2) -> void:
 		box(tag, SAKURA, COCOA, 14, 2)
 		glyph("check", tag.position + Vector2(16, 14), 7, TEXT)
 		label("上阵", Rect2(tag.position + Vector2(26, 0), Vector2(46, 28)), 14, TEXT, MID, 2, 3, SAKURA_DEEP)
+	if available and stage > 0:
+		buttons.append([rect, toggle_card.bind(i), "select"])
+
+# 第 02 章卡多，用小号工牌排成 7 × 3。
+func draw_badge_small(i: int, rect: Rect2) -> void:
+	var card: Dictionary = Campaign.CARDS[i]
+	var accent: Color = ACCENTS[i]
+	var available := Campaign.available(i, stage)
+	var on: bool = loadout[i]
+	var hot := available and rect.has_point(pointer)
+	if hot:
+		brief_focus = i
+	var r := rect
+	if on:
+		r.position.y -= 4
+	elif hot:
+		r.position.y -= 2
+	if on:
+		box(r.grow(4), Color(accent, 0.45), Color.TRANSPARENT, 16)
+	box(r, CREAM if available else LATTE, accent.darkened(0.25) if on else COCOA, 13, 3 if on else 2, 0.2)
+	box(Rect2(r.position + Vector2(3, 3), Vector2(r.size.x - 6, 18)), accent if available else Color("#c8ad93"), Color.TRANSPARENT, 9)
+	label("No.%d" % (i + 1), Rect2(r.position + Vector2(8, 3), Vector2(50, 18)), 10, TEXT, 0, 2, 2, Color(COCOA, 0.6))
+	var tag: String = card.get("tag", "")
+	if tag != "":
+		var pill := Rect2(r.end.x - 40, r.position.y + 3, 37, 18)
+		box(pill, COCOA if tag == "SP" else Color("#5a3d8a"), Color.TRANSPARENT, 9)
+		label(tag, pill, 10, GOLD if tag == "SP" else TEXT, MID, 2)
+	sprite(card.key, Rect2(r.position + Vector2(6, 22), Vector2(r.size.x - 12, 58)), Color.WHITE if available else Color(0.6, 0.55, 0.55, 0.45))
+	label(card.name, Rect2(r.position.x + 4, r.position.y + 80, r.size.x - 8, 18), 13, COCOA if available else INK_SOFT, MID, 2)
+	var cost := Rect2(r.get_center().x - 26, r.position.y + 97, 52, 16)
+	box(cost, Color(MINT, 0.55) if available else Color("#dcc6ae"), COCOA, 8, 1)
+	gem(cost.position + Vector2(10, 8), 5, MINT_DEEP if available else INK_SOFT, Color.TRANSPARENT)
+	label(str(card.cost), Rect2(cost.position + Vector2(16, 0), Vector2(34, 16)), 11, COCOA, MID, 2)
+	if not available:
+		draw_circle(r.position + Vector2(r.size.x * 0.5, 50), 16, Color(COCOA, 0.8), true, -1.0, true)
+		glyph("lock", r.position + Vector2(r.size.x * 0.5, 50), 9, CREAM)
+		label(Campaign.code(Campaign.UNLOCKS[i]) + " 解锁", Rect2(r.position.x, r.position.y + 62, r.size.x, 16), 10, TEXT, MID, 2, 3, Color(COCOA, 0.7))
+	elif on:
+		draw_circle(r.position + Vector2(r.size.x - 6, 4), 11, SAKURA, true, -1.0, true)
+		draw_circle(r.position + Vector2(r.size.x - 6, 4), 11, COCOA, false, 2.0, true)
+		glyph("check", r.position + Vector2(r.size.x - 6, 4), 6, TEXT)
 	if available and stage > 0:
 		buttons.append([rect, toggle_card.bind(i), "select"])
 
@@ -1305,17 +1646,21 @@ func draw_receipt(level: Dictionary, arena: Array, r: Rect2) -> void:
 	pts.append(pts[0])
 	draw_polyline(pts, COCOA, 3.0, true)
 	label("今 日 来 客", Rect2(r.position.x, r.position.y + 14, r.size.x, 30), 21, COCOA, MID, 2)
-	label("No.%s · %s" % [Campaign.code(stage), arena[0]], Rect2(r.position.x, r.position.y + 44, r.size.x, 20), 13, INK_SOFT, MID, 1)
+	var tag := "No.%s · %s" % [Campaign.code(stage), arena[0]]
+	match level.get("event", ""):
+		"rain": tag += " · 全程下雨"
+		"blackout": tag += " · 第 3 波停电"
+	label(tag, Rect2(r.position.x, r.position.y + 44, r.size.x, 20), 13, INK_SOFT, MID, 1)
 	draw_dashed_line(Vector2(r.position.x + 16, r.position.y + 74), Vector2(r.end.x - 16, r.position.y + 74), Color(COCOA, 0.45), 2.0, 6.0)
 	var counts := {}
 	for spawn in level.spawns:
 		counts[spawn[3]] = int(counts.get(spawn[3], 0)) + 1
 	var row := 0
-	for id in ["X", "T", "D", "I", "B", "A", "S", "R", "C"]:
-		if not counts.has(id) or row >= 6:
-			continue
+	var kinds := ENEMY_ORDER.filter(func(id): return counts.has(id))
+	var pitch := minf(50.0, 300.0 / maxf(1.0, kinds.size()))
+	for id in kinds:
 		var enemy: Dictionary = Campaign.ENEMIES[id]
-		var y := r.position.y + 84 + row * 50
+		var y := r.position.y + 84 + row * pitch
 		sprite(enemy.key, Rect2(r.position.x + 14, y, 52, 46))
 		label(enemy.name, Rect2(r.position.x + 74, y + 2, 140, 24), 16, COCOA, 0, 2)
 		label(ENEMY_TIPS[id], Rect2(r.position.x + 74, y + 25, 140, 20), 12, INK_SOFT, 0, 1)
@@ -1370,15 +1715,30 @@ func draw_result() -> void:
 		draw_circle(Vector2(640, 262), 46, COCOA, false, 3.0, true)
 		glyph("cup", Vector2(640, 268), 24, Color("#9a7488"))
 		draw_line(Vector2(626, 238), Vector2(650, 290), Color("#fffaf2"), 4.0, true)
-	var stats := [["击退", str(battle.defeated)], ["部署", str(battle.placed)], ["收集", str(battle.collected)], ["用时", "%d:%02d" % [floori(battle.time / 60.0), int(battle.time) % 60]]]
+	var clock := "%d:%02d" % [floori(battle.time / 60.0), int(battle.time) % 60]
+	var stats := [["击退", str(battle.defeated)], ["部署", str(battle.placed)], ["收集", str(battle.collected)], ["用时", clock]]
+	if battle.chapter == 2:
+		stats = [["击退", str(battle.defeated)], ["满意度", str(battle.core)], ["设施", "%d 次" % battle.facility_uses], ["用时", clock]]
 	for s in range(4):
 		var cell := Rect2(r.position.x + 30 + s * 117, r.position.y + 216, 108, 62)
 		box(cell, Color("#f6e6cf"), Color(COCOA, 0.0), 14)
 		label(stats[s][1], Rect2(cell.position + Vector2(0, 4), Vector2(cell.size.x, 32)), 24, COCOA, MID, 2)
 		label(stats[s][0], Rect2(cell.position + Vector2(0, 36), Vector2(cell.size.x, 20)), 13, INK_SOFT, MID, 1)
 	var copy := "清洁机器人每路只能救场一次，换一套布阵再试试。"
+	if battle.chapter == 2:
+		copy = "督察官走到了吧台，再调整一下阵容吧。" if battle.boss_kind == "V" and battle.core > 0 else "满意度归零了，别让来客漏过去。"
 	if won:
-		copy = ("EX 挑战已完成，感谢守店！" if stage == 21 else "第 01 章通关，EX 挑战已解锁。" if stage == 20 else "进度已保存，下一关已解锁。") if save_ok else "进度写入失败，可以重试。"
+		copy = "进度已保存，下一关已解锁。"
+		if stage == 21:
+			copy = "EX 挑战已完成，感谢守店！"
+		elif stage == 20:
+			copy = "第 01 章通关，EX 挑战与第 02 章已开放。"
+		elif stage == Campaign.levels.size() - 1:
+			copy = "第 02 章通关，感谢守店！"
+		elif battle.chapter == 2 and rating < 3:
+			copy = "满意度 100 且用过场景设施，就能拿到三星。"
+		if not save_ok:
+			copy = "进度写入失败，可以重试。"
 	label(copy, Rect2(r.position.x + 20, r.position.y + 290, r.size.x - 40, 30), 16, COCOA if won else SAKURA_DEEP, MID, 1)
 	if won and save_ok and stage < Campaign.levels.size() - 1:
 		candy("下一关  ›", Rect2(430, r.position.y + 334, 420, 64), open_stage.bind(stage + 1), 0, 23)
@@ -1424,20 +1784,33 @@ func draw_battle() -> void:
 	var live: bool = (state == PLAY and not paused) or state == RESULT
 	cam = shake_offset() if live else Vector2.ZERO
 	draw_set_transform(cam)
-	draw_texture_rect(art[battle.level.arena], Rect2(Vector2(-16, -16), SIZE + Vector2(32, 32)), false)
-	draw_rect(Rect2(-16, -16, 1312, 752), Color(PLUM, 0.1))
+	var terrace: bool = battle.chapter == 2
+	if terrace:
+		draw_terrace()
+	else:
+		draw_texture_rect(art[battle.level.arena], Rect2(Vector2(-16, -16), SIZE + Vector2(32, 32)), false)
+		draw_rect(Rect2(-16, -16, 1312, 752), Color(PLUM, 0.1))
 	draw_signs()
 	var hover := board_cell(pointer)
 	for row in range(battle.level.rows):
 		var y := lane_y(row)
 		var height := row_height()
-		box(Rect2(BOARD_X - 8, y - 3, 9 * CELL + 16, height + 6), Color(PLUM, 0.34), Color(CREAM, 0.5), 14, 2)
+		var lane_fill := Color(PLUM, 0.34)
+		if terrace:
+			lane_fill = Color("#2c3350", 0.42) if row in battle.conveyor_rows else Color("#2d4430", 0.36)
+		box(Rect2(BOARD_X - 8, y - 3, 9 * CELL + 16, height + 6), lane_fill, Color(CREAM, 0.5), 14, 2)
 		draw_robot(row, y)
 		for col in range(9):
 			draw_tile(row, col, hover)
+		if terrace:
+			draw_conveyor(row)
+			draw_residues(row)
+			draw_umbrellas(row)
 		for col in range(9):
 			if battle.towers[row][col] != null:
 				draw_tower(row, col, battle.towers[row][col])
+			if terrace and battle.minis[row][col] != null:
+				draw_mini(row, col, battle.minis[row][col], battle.towers[row][col] != null)
 		for enemy in battle.enemies:
 			if enemy.row == row:
 				draw_enemy(enemy)
@@ -1455,12 +1828,25 @@ func draw_battle() -> void:
 		draw_impact(hit)
 	for alert in battle.warnings:
 		draw_warning(alert)
+	for beam in beams:
+		var bt: float = (ui_time - beam.at) / 0.35
+		if bt > 1.0:
+			continue
+		var by := lane_y(beam.row) + row_height() * 0.45
+		var bx := board_x(beam.col + 0.6)
+		var seg := 90.0
+		var n := int((board_x(9.3) - bx) / seg) + 1
+		for k in range(n):
+			effect("r1_beam", Vector2(bx + seg * (k + 0.5), by), Vector2(seg + 6, 40 * (1.0 - bt * 0.6)), 1.0 - bt)
+		draw_line(Vector2(bx, by), Vector2(board_x(9.3), by), Color(1, 1, 1, 0.8 * (1.0 - bt)), 4.0 * (1.0 - bt) + 1.0, true)
 	for g in ghosts:
 		var t: float = g.age / 0.38
 		var rect: Rect2 = g.rect
 		sprite_at(g.key, rect, Color(1.6, 1.6, 1.6, 1.0 - t), Vector2(1.0 + t * 0.35, 1.0 - t * 0.25), Vector2(rect.get_center().x, rect.end.y))
 	draw_parts(parts)
 	draw_floaters(false)
+	if terrace:
+		draw_weather()
 	draw_set_transform(Vector2.ZERO)
 	cam = Vector2.ZERO
 	draw_hud()
@@ -1476,14 +1862,20 @@ func draw_battle() -> void:
 		draw_rect(Rect2(Vector2.ZERO, SIZE), Color(flash_color, flash * 0.45))
 
 func draw_signs() -> void:
-	var left := Rect2(30, 180, 108, 36)
-	box(left, WOOD, GOLD_DEEP, 12, 2, 0.3)
-	glyph("cup", left.position + Vector2(22, 18), 9, GOLD)
-	label("吧台", Rect2(left.position + Vector2(36, 0), Vector2(66, 36)), 16, CREAM, MID, 2)
+	if battle.chapter == 2:
+		draw_core_gauge()
+	else:
+		draw_bar_sign()
 	var right := Rect2(1146, 180, 104, 36)
 	box(right, WOOD, GOLD_DEEP, 12, 2, 0.3)
 	glyph("door", right.position + Vector2(22, 18), 9, GOLD)
 	label("入口 ‹", Rect2(right.position + Vector2(34, 0), Vector2(66, 36)), 16, CREAM, MID, 2)
+
+func draw_bar_sign() -> void:
+	var left := Rect2(30, 180, 108, 36)
+	box(left, WOOD, GOLD_DEEP, 12, 2, 0.3)
+	glyph("cup", left.position + Vector2(22, 18), 9, GOLD)
+	label("吧台", Rect2(left.position + Vector2(36, 0), Vector2(66, 36)), 16, CREAM, MID, 2)
 
 func draw_tile(row: int, col: int, hover: Vector2i) -> void:
 	var y := lane_y(row)
@@ -1504,14 +1896,22 @@ func draw_tile(row: int, col: int, hover: Vector2i) -> void:
 	box(tile, Color(1, 0.95, 0.88, 0.13 if (col + row) % 2 == 0 else 0.06), Color.TRANSPARENT, 9)
 	if cell != hover or state != PLAY or paused:
 		return
-	if selected >= 0:
+	if battle.props.has(cell):
+		box(tile, Color(GOLD, 0.2), GOLD if battle.wreck_at(row, col) and selected == -1 else Color(CREAM, 0.6), 9, 3 if battle.wreck_at(row, col) else 2)
+		return
+	if selected == -3:
+		var tint := SKY if tower != null else CREAM
+		box(tile, Color(tint, 0.24), tint, 9, 3)
+	elif selected >= 0:
 		var card: Dictionary = Campaign.CARDS[selected]
-		var ok: bool = tower == null and battle.time >= battle.ready_at[selected] and battle.power >= card.cost
+		var mini := Campaign.is_mini(selected)
+		var free: bool = battle.minis[row][col] == null if mini else tower == null
+		var ok: bool = free and battle.time >= battle.ready_at[selected] and battle.power >= card.cost
 		var tint := MINT if ok else BERRY
 		box(tile, Color(tint, 0.24), tint, 9, 3)
 		if ok:
 			var accent: Color = ACCENTS[selected]
-			if selected in [0, 2, 4, 5, 7]:
+			if selected in [0, 2, 4, 5, 7, 8, 10, 11, 12, 14, 16, 17, 20]:
 				var lanes := [row]
 				if selected == 4:
 					lanes = range(maxi(0, row - 1), mini(battle.level.rows - 1, row + 1) + 1)
@@ -1520,7 +1920,10 @@ func draw_tile(row: int, col: int, hover: Vector2i) -> void:
 					draw_dashed_line(Vector2(tile.end.x + 4, ly), Vector2(board_x(9) - 6, ly), Color(accent, 0.75), 3.0, 12.0)
 			elif selected == 6:
 				box(Rect2(BOARD_X, y, 9 * CELL, h), Color(MINT, 0.12), Color.TRANSPARENT, 10)
-			sprite(card.key, tile.grow(-4), Color(1, 1, 1, 0.6))
+			if mini and tower != null:
+				sprite(card.key, Rect2(tile.end - Vector2(tile.size.x * 0.5, tile.size.y * 0.62), tile.size * Vector2(0.5, 0.6)), Color(1, 1, 1, 0.7))
+			else:
+				sprite(card.key, tile.grow(-4), Color(1, 1, 1, 0.6))
 	elif selected == -2:
 		var tint := BERRY if tower != null else CREAM
 		box(tile, Color(tint, 0.24), tint, 9, 3)
@@ -1529,7 +1932,10 @@ func draw_tile(row: int, col: int, hover: Vector2i) -> void:
 
 func draw_robot(row: int, y: float) -> void:
 	var ready: bool = battle.robots[row]
-	sprite("robot", Rect2(140, y + 18, 64, row_height() - 21), Color(1, 1, 1, 1.0 if ready else 0.25))
+	if battle.chapter == 2:
+		ready = true
+	else:
+		sprite("robot", Rect2(140, y + 18, 64, row_height() - 21), Color(1, 1, 1, 1.0 if ready else 0.25))
 	var c := Vector2(150, y + 12)
 	draw_circle(c, 11, COCOA, true, -1.0, true)
 	draw_circle(c, 9, MINT if ready else Color("#b8a0a8"), true, -1.0, true)
@@ -1553,20 +1959,37 @@ func draw_hud() -> void:
 	draw_arc(pc, 38, 0.0, TAU, 40, MINT, 4.0, true)
 	gem(pc + Vector2(0, -7), 17.0 * pop, MINT)
 	label("算力", Rect2(pc.x - 30, pc.y + 14, 60, 20), 13, MINT, MID, 2)
+	if battle.chapter == 2 and battle.income_frozen_until > battle.time:
+		draw_circle(pc, 44, Color("#bfe9ff", 0.88), true, -1.0, true)
+		label("冻结 %d" % ceili(battle.income_frozen_until - battle.time), Rect2(pc.x - 40, pc.y - 12, 80, 24), 15, TEXT, MID, 2, 5, Color("#2b5a7a"))
 	var active := equipped()
+	var wide := active.size() <= 5
+	var card_w := 104.0 if wide else 94.0
+	var card_step := 114.0 if wide else 100.0
+	var first_x := 246.0 if wide else 238.0
 	for slot in range(active.size()):
-		draw_card(active[slot], slot, Rect2(246 + slot * 114, 24, 104, 108))
-	round_button("broom", Vector2(866, 64), 30, toggle_remove, selected == -2, "移除")
-	round_button("pause", Vector2(944, 64), 30, pause_game, false, "暂停")
+		draw_card(active[slot], slot, Rect2(first_x + slot * card_step, 24, card_w, 108))
+	var x := maxf(866.0, first_x + active.size() * card_step + 30.0)
+	round_button("broom", Vector2(x, 64), 30, toggle_remove, selected == -2, "移除")
+	var step := 74.0 if wide else 70.0
+	if battle.charger:
+		x += step
+		tool_button("bolt", Vector2(x, 64), toggle_overclock, selected == -3, "超频 %d" % Battle.CHARGER_COST, battle.charger_wait(), Battle.CHARGER_CD, battle.power >= Battle.CHARGER_COST)
+	if not battle.conveyor_rows.is_empty():
+		x += step
+		tool_button("reverse", Vector2(x, 64), use_reverse, battle.reverse_until > battle.time, "逆流 %d" % Battle.CONVEYOR_COST, battle.conveyor_wait(), Battle.CONVEYOR_CD, battle.power >= Battle.CONVEYOR_COST)
+	x += step + 4.0
+	round_button("pause", Vector2(x, 64), 30, pause_game, false, "暂停")
 	for b in buttons:
-		if b[1] == Callable(self, "toggle_remove"):
+		if b[1] == Callable(self, "toggle_remove") or b[1] == Callable(self, "toggle_overclock"):
 			b[2] = ""
 	var arena: Array = ARENAS[battle.level.arena]
-	var chip := Rect2(1004, 32, 78, 30)
-	box(chip, GOLD_DEEP if stage == Campaign.levels.size() - 1 else arena[1], COCOA, 15, 2)
+	var left := x + 46.0
+	var chip := Rect2(left, 32, 78, 30)
+	box(chip, GOLD_DEEP if stage in [21, Campaign.levels.size() - 1] else arena[1], COCOA, 15, 2)
 	label(Campaign.code(stage), chip, 15, TEXT, MID, 2, 3, COCOA)
-	label(arena[0], Rect2(1090, 32, 150, 30), 14, GOLD, 0, 2)
-	label(battle.level.title, Rect2(1004, 70, 236, 40), 22, CREAM, 0, 2, 5, COCOA)
+	label(arena[0], Rect2(left + 86, 32, 1244 - left - 86, 30), 14, GOLD, 0, 2)
+	label(battle.level.title, Rect2(left, 70, 1244 - left, 40), 22, CREAM, 0, 2, 5, COCOA)
 
 func draw_card(i: int, slot: int, rect: Rect2) -> void:
 	var card: Dictionary = Campaign.CARDS[i]
@@ -1615,8 +2038,10 @@ func draw_bottom() -> void:
 	var help: String = battle.level.brief
 	if selected == -2:
 		help = "点击一位店员所在的格子将其移除。"
+	elif selected == -3:
+		help = "点一位店员超频：8 秒攻速 +50%，结束后过热 1.5 秒。"
 	elif selected >= 0:
-		help = Campaign.CARDS[selected].desc + "  点击空格部署。"
+		help = Campaign.CARDS[selected].desc + ("  点店员或空格部署。" if Campaign.is_mini(selected) else "  点击空格部署。")
 	elif stage == 0:
 		help = ("教学 ① 点击场上的发光算力。" if battle.collected == 0 else
 			"教学 ② 点击 GPT 卡，再点击路上的空格。" if battle.placed == 0 else
@@ -1648,15 +2073,17 @@ func draw_banner() -> void:
 func draw_boss_meter() -> void:
 	var r := Rect2(390, 148, 500, 46)
 	box(r, Color(WOOD, 0.96), GOLD_DEEP, 14, 3, 0.35)
-	sprite("boss%d" % battle.boss_phase, Rect2(392, 136, 58, 58))
+	var victor: bool = battle.boss_kind == "V"
+	sprite(boss_art(), Rect2(392, 136, 58, 58))
 	var ratio: float = battle.boss_hp / maxf(1.0, battle.boss_max)
-	label("算力收购机甲 · " + PHASE_NAMES[battle.boss_phase], Rect2(456, 150, 300, 22), 14, GOLD, 0, 2)
+	var title: String = Campaign.ENEMIES[battle.boss_kind].name + " · " + BOSS_PHASES[battle.boss_kind][battle.boss_phase]
+	label(title, Rect2(456, 150, 300, 22), 14, GOLD, 0, 2)
 	label("%d%%" % ceili(ratio * 100.0), Rect2(770, 150, 106, 22), 14, CREAM, END, 2)
 	var track := Rect2(456, 174, 422, 12)
 	box(track, Color("#2a1a1a"), COCOA, 6, 2)
 	if ratio > 0.0:
 		box(Rect2(track.position + Vector2(2, 2), Vector2((track.size.x - 4) * ratio, 8)), BERRY, Color.TRANSPARENT, 4)
-	for mark in [0.7, 0.35]:
+	for mark in ([0.66, 0.33] if victor else [] if battle.boss_kind == "M" else [0.7, 0.35]):
 		var x: float = track.position.x + track.size.x * mark
 		draw_line(Vector2(x, track.position.y), Vector2(x, track.end.y), CREAM, 2.0)
 
@@ -1702,12 +2129,25 @@ func draw_tower(row: int, col: int, tower: Dictionary) -> void:
 		scale = Vector2(k, k)
 	var hit_age: float = battle.time - tower.hit
 	var tint := Color.WHITE
+	var idle: String = battle.idle_reason(tower) if battle.chapter == 2 else ""
 	if tower.sealed > battle.time:
 		tint = Color("#c9a3c0")
 	elif hit_age < 0.12:
 		tint = Color(1.0, 0.6, 0.6)
 		scale *= Vector2(1.05, 0.95)
-	sprite_at(card.key + ("_act" if acting else ""), Rect2(x - 50 + recoil, y - 2 + lift, 100, height - 8), tint, scale, Vector2(x, y + height - 10))
+	elif idle != "":
+		tint = Color(0.72, 0.7, 0.78)
+	if tower.get("boost", 0.0) > battle.time:
+		draw_circle(Vector2(x, y + height * 0.5), 40 + 3 * sin(ui_time * 10.0), Color(GOLD, 0.22), true, -1.0, true)
+	var key: String = card.key + "_act" if acting and art.has(card.key + "_act") else card.key
+	sprite_at(key, Rect2(x - 50 + recoil, y - 2 + lift, 100, height - 8), tint, scale, Vector2(x, y + height - 10))
+	if tower.card == 16 and tower.get("charge", 0.0) > battle.time:
+		var k: float = 1.0 - (tower.charge - battle.time) / 2.0
+		draw_arc(Vector2(x, y + height * 0.45), 34, -PI * 0.5, -PI * 0.5 + TAU * k, 32, SKY, 4.0, true)
+		for b in range(3):
+			draw_circle(Vector2(x + 18 + b * 7, y + 2 - b * 8 - sin(ui_time * 6.0 + b) * 2), 3 + b, Color(CREAM, 0.85), true, -1.0, true)
+	if battle.chapter == 2:
+		draw_status(tower, x, y, height)
 	if acting and tower.card != 1:
 		cast_fx(tower.card, Vector2(x + 31, y + height * 0.43), t)
 	if tower.hp < card.hp:
@@ -1729,12 +2169,19 @@ func draw_enemy(enemy: Dictionary) -> void:
 	var x := board_x(enemy.x)
 	var y := lane_y(enemy.row)
 	var height := row_height()
-	var boss: bool = enemy.kind == "X"
+	var boss: bool = enemy.kind in ["X", "V"]
+	var flying: bool = enemy.get("fly", false)
 	var appear := clampf((battle.time - float(enemy.get("born", -9.0))) / 0.4, 0.0, 1.0)
 	var bob := absf(sin(battle.time * (13.0 if enemy.kind == "R" else 8.0) + enemy.x)) * 4.0
-	if enemy.wait > battle.time:
+	if enemy.wait > battle.time or enemy.get("freeze", 0.0) > battle.time:
 		bob = 0.0
-	ellipse(Vector2(x, y + height - 13), Vector2(52 if boss else 27, 12 if boss else 6), Color(PLUM, 0.6 * appear))
+	if flying:
+		bob = 10.0 + sin(battle.time * 7.0 + enemy.x) * 4.0
+	var shadow := Vector2(52, 12) if boss else Vector2(18, 4) if flying else Vector2(40, 9) if enemy.kind == "W" else Vector2(20, 5) if enemy.kind == "Q" else Vector2(27, 6)
+	ellipse(Vector2(x, y + height - 13), shadow, Color(PLUM, (0.35 if flying else 0.6) * appear))
+	if enemy.kind == "V" and enemy.charge > battle.time:
+		var k: float = 1.0 - (enemy.charge - battle.time) / 4.0
+		draw_circle(Vector2(x, y + height * 0.2), 70 + 12 * sin(ui_time * 14.0), Color(BERRY, 0.16 + 0.2 * k), true, -1.0, true)
 	if enemy.slow > 0:
 		draw_set_transform(cam + Vector2(x, y + height - 13), 0.0, Vector2(1.0, 0.25))
 		draw_arc(Vector2.ZERO, 32.0, battle.time * 2.0, battle.time * 2.0 + 4.8, 24, SKY, 4.0, true)
@@ -1761,12 +2208,61 @@ func draw_enemy(enemy: Dictionary) -> void:
 			var ly := y + height * (0.3 + k * 0.18)
 			var lx := x + 30 + fmod(battle.time * 260.0 + k * 37.0, 40.0)
 			draw_line(Vector2(lx, ly), Vector2(lx + 26, ly), Color(GOLD, 0.7), 3.0, true)
+	var key: String = Campaign.ENEMIES[enemy.kind].key
+	var rect := Rect2(x - 45 + dx, y - bob, 90, height - 10)
 	if boss:
-		sprite_at("boss%d" % battle.boss_phase, Rect2(x - 81 + dx, y - 68 - bob, 162, height + 57), tint, scale, Vector2(x, y + height - 10))
-		if enemy.armor > battle.time:
-			effect("claude_fx", Vector2(x - 55, y + height * 0.18), Vector2(64, 90), 0.8)
-	else:
-		sprite_at(Campaign.ENEMIES[enemy.kind].key, Rect2(x - 45 + dx, y - bob, 90, height - 10), tint, scale, Vector2(x, y + height - 12))
+		rect = Rect2(x - 81 + dx, y - 68 - bob, 162, height + 57)
+		if enemy.kind == "X":
+			key = "boss%d" % battle.boss_phase
+		elif enemy.kind == "V":
+			key = boss_art()
+	elif enemy.kind == "W":
+		rect = Rect2(x - 60 + dx, y - 14, 120, height + 4)
+	elif enemy.kind == "M":
+		rect = Rect2(x - 95 + dx, y - 48 - bob, 190, height + 22)
+	elif enemy.kind == "Q":
+		rect = Rect2(x - 32 + dx, y + 8 - bob, 64, height - 18)
+	elif flying:
+		rect = Rect2(x - 42 + dx, y - 12 - bob, 84, height * 0.78)
+	if enemy.kind == "H" and fmod(ui_time * 3.0 + enemy.x, 1.0) < 0.35:
+		sprite(key, Rect2(rect.position + Vector2(-5, 0), rect.size), Color(0.3, 1.0, 1.0, 0.35 * appear))
+		sprite(key, Rect2(rect.position + Vector2(5, 1), rect.size), Color(1.0, 0.3, 0.9, 0.35 * appear))
+	sprite_at(key, rect, tint, scale, Vector2(x, rect.end.y - 2))
+	if enemy.kind == "X" and enemy.armor > battle.time:
+		effect("claude_fx", Vector2(x - 55, y + height * 0.18), Vector2(64, 90), 0.8)
+	if enemy.get("freeze", 0.0) > battle.time:
+		var ice := Rect2(rect.position + Vector2(rect.size.x * 0.18, rect.size.y * 0.25), Vector2(rect.size.x * 0.64, rect.size.y * 0.75))
+		box(ice, Color(SKY, 0.38), Color(1, 1, 1, 0.85), 8, 2)
+		draw_line(ice.position + Vector2(6, 6), ice.position + Vector2(18, 20), Color(1, 1, 1, 0.8), 2.0, true)
+		star(ice.position + Vector2(ice.size.x - 8, 8), 6, Color(1, 1, 1, 0.9), COCOA, 0.0, ui_time * 2.0)
+	if enemy.kind == "P" and enemy.get("aim", 0.0) > battle.time:
+		var k: float = 1.0 - (enemy.aim - battle.time) / 0.7
+		star(Vector2(x - 26, y + height * 0.3), 6 + 14 * k, Color(1, 1, 0.85, 0.5 + 0.5 * k), COCOA, 0.0, ui_time * 4.0)
+	if enemy.get("burn", 0.0) > battle.time:
+		for k in range(4):
+			var fx := x - 18 + k * 12 + sin(ui_time * 9.0 + k) * 3
+			var fy := rect.end.y - 18 - fmod(ui_time * 40.0 + k * 9.0, 22.0)
+			draw_colored_polygon(PackedVector2Array([Vector2(fx, fy - 9), Vector2(fx + 5, fy + 3), Vector2(fx - 5, fy + 3)]), Color(1.0, 0.45 + 0.3 * (k % 2), 0.1, 0.85))
+	if enemy.get("mark", 0.0) > battle.time:
+		var mc := Vector2(x, rect.position.y - 4)
+		draw_circle(mc, 12, Color("#6c7cff", 0.9), true, -1.0, true)
+		draw_arc(mc, 12, 0.0, TAU, 20, Color(1, 1, 1, 0.9), 2.0, true)
+		label("标", Rect2(mc - Vector2(12, 12), Vector2(24, 24)), 13, TEXT, MID, 2)
+	if enemy.get("stolen", 0) > 0:
+		var bag := Rect2(x + 14, rect.position.y + 4, 44, 20)
+		box(bag, COCOA, GOLD, 10, 2)
+		label("+%d" % enemy.stolen, bag, 12, GOLD, MID, 2)
+	if enemy.get("weak", 0.0) > battle.time:
+		draw_colored_polygon(PackedVector2Array([Vector2(x + 22, y + 6), Vector2(x + 34, y + 6), Vector2(x + 28, y + 16)]), Color("#b07cff"))
+	if enemy.kind == "V" and enemy.charge > battle.time:
+		var left: float = enemy.charge - battle.time
+		var c := Vector2(x, y - 74)
+		draw_circle(c, 24, Color(COCOA, 0.85), true, -1.0, true)
+		draw_arc(c, 21, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - left / 4.0), 36, BERRY, 5.0, true)
+		label("%.1f" % left, Rect2(c - Vector2(20, 12), Vector2(40, 24)), 14, TEXT, MID, 2)
+		var tag := Rect2(c + Vector2(30, -14), Vector2(118, 28))
+		box(tag, COCOA, BERRY, 14, 2)
+		label("打断 %d/%d" % [int(enemy.charge_dmg), int(Battle.INTERRUPT)], tag, 13, GOLD, MID, 2)
 	if enemy.boost > battle.time:
 		effect("kimi_fx", Vector2(x, y + height * 0.47), Vector2(63, 49), 0.7)
 	if enemy.hidden:
@@ -1783,18 +2279,25 @@ func draw_enemy(enemy: Dictionary) -> void:
 func draw_token(token: Dictionary) -> void:
 	var p := token_point(token)
 	var color := GOLD if token.kimi else MINT
+	var value: int = token.get("value", 25)
+	var gold: bool = token.get("gold", false)
 	var age: float = battle.time - token.born
 	var alpha := 1.0 if age < 8.0 else 0.65 + 0.35 * sin(age * 17.0)
 	var hot := p.distance_to(pointer) < 30.0
 	draw_circle(p, 30, Color(color, 0.12 * alpha), true, -1.0, true)
 	draw_circle(p, 22, Color(color, 0.22 * alpha), true, -1.0, true)
 	draw_arc(p, 19, age * 2.8, age * 2.8 + 4.6, 24, Color(color, 0.9 * alpha), 2.5, true)
-	gem(p, 15.0 if hot else 12.0, Color(color, alpha))
+	if gold:
+		draw_colored_polygon(PackedVector2Array([p + Vector2(-16, -2), p + Vector2(-9, -11), p + Vector2(9, -11), p + Vector2(16, -2), p + Vector2(11, 8), p + Vector2(-11, 8)]), Color("#ffcf3d", alpha))
+		draw_polyline(PackedVector2Array([p + Vector2(-16, -2), p + Vector2(-9, -11), p + Vector2(9, -11), p + Vector2(16, -2), p + Vector2(11, 8), p + Vector2(-11, 8), p + Vector2(-16, -2)]), Color(COCOA, alpha), 2.0, true)
+		draw_circle(p + Vector2(0, -4), 5, Color("#fff1a8", alpha), true, -1.0, true)
+	else:
+		gem(p, 15.0 if hot else 12.0, Color(color, alpha))
 	star(p + Vector2(11, -12), 4.5 * absf(sin(age * 4.0)) + 1.0, Color(1, 1, 1, alpha), COCOA, 0.0)
-	if hot or (stage == 0 and battle.collected == 0):
+	if hot or gold or (stage == 0 and battle.collected == 0):
 		var tag := Rect2(p + Vector2(-25, 22), Vector2(50, 22))
 		box(tag, COCOA, Color.TRANSPARENT, 11)
-		label("+25", tag, 13, color, MID, 2)
+		label("+%d" % value, tag, 13, color, MID, 2)
 
 func cast_fx(kind: int, p: Vector2, t: float) -> void:
 	var fade := 1.0 - t
@@ -1807,6 +2310,15 @@ func cast_fx(kind: int, p: Vector2, t: float) -> void:
 		5: effect("qwen_shot", p + Vector2(16 * t, 0), Vector2(76, 54) * (0.66 + t * 0.48), fade)
 		6: effect("glm_fx", p + Vector2(17 * t, 0), Vector2(86, 57) * (0.68 + t * 0.43), fade)
 		7: effect("grok_hit", p + Vector2(7, 0), Vector2(56, 56) * (0.63 + t * 0.42), fade)
+		8: effect("mistral_shot", p + Vector2(10 * t, 0), Vector2(60, 40) * (0.6 + t * 0.5), fade)
+		9: effect("doubao_fx", p + Vector2(12 * t, 0), Vector2(90, 80) * (0.6 + t * 0.6), fade)
+		10: effect("hailuo_shot", p + Vector2(12 * t, 0), Vector2(70, 60) * (0.6 + t * 0.5), fade)
+		11: effect("spark_shot", p + Vector2(10 * t, 0), Vector2(60, 40) * (0.6 + t * 0.5), fade)
+		12: effect("ernie_shot", p + Vector2(10 * t, 0), Vector2(70, 40) * (0.6 + t * 0.5), fade)
+		13: effect("kimi_fx", p + Vector2(4, -20 * t), Vector2(90, 76) * (0.7 + t * 0.4), fade)
+		14: effect("llama_shot", p + Vector2(10 * t, 0), Vector2(50, 40) * (0.6 + t * 0.5), fade)
+		15: effect("paint_wall", p + Vector2(18 * t, 0), Vector2(60, 60) * (0.5 + t * 0.5), fade * 0.8)
+		16: effect("r1_beam", p + Vector2(20 * t, 0), Vector2(90, 40) * (0.6 + t * 0.5), fade)
 
 func draw_shot(shot: Dictionary) -> void:
 	var age: float = battle.time - shot.born
@@ -1814,6 +2326,10 @@ func draw_shot(shot: Dictionary) -> void:
 	if shot.card == 7:
 		p.y -= 12.0 * absf(sin(age * 8.0))
 	var size := Vector2(74, 35) * (1.0 + 0.09 * sin(age * 24.0))
+	if shot.card in SMALL_SHOTS:
+		size *= 0.55
+	elif shot.card == 10:
+		size = Vector2(60, 64)
 	for k in range(1, 4):
 		effect(SHOT_ART[shot.card], p - Vector2(k * 12.0, 0), size * (1.0 - k * 0.16), 0.32 - k * 0.08)
 	effect(SHOT_ART[shot.card], p, size)
@@ -1828,7 +2344,7 @@ func draw_impact(hit: Dictionary) -> void:
 		draw_rect(Rect2(BOARD_X, lane_y(hit.row), 9 * CELL, row_height()), Color(MINT, 0.22 * (1.0 - t)))
 		effect("glm_fx", p + Vector2((t - 0.5) * 850, 0), Vector2(181, 68), 1.0 - t)
 	elif hit.kind in HIT_ART:
-		var size := Vector2(132, 116) if hit.kind == 7 else Vector2(75, 65)
+		var size := Vector2(132, 116) if hit.kind == 7 else Vector2(45, 40) if hit.kind in SMALL_SHOTS else Vector2(75, 65)
 		effect(HIT_ART[hit.kind], p, size * (0.46 + t * 0.9), 1.0 - t)
 
 func draw_flyers() -> void:
@@ -1867,3 +2383,281 @@ func draw_tutorial() -> void:
 	var bubble := Rect2(tip + Vector2(22, -40 * d - 14), Vector2(78, 28))
 	box(bubble, COCOA, Color.TRANSPARENT, 14)
 	label("点这里", bubble, 14, CREAM, MID, 2)
+
+# ---------------------------------------------------------------- 第 02 章：场景、设施与状态
+
+func draw_terrace() -> void:
+	var key := "terrace" if art.has("terrace") else "arena"
+	draw_texture_rect(art[key], Rect2(Vector2(-16, -16), SIZE + Vector2(32, 32)), false)
+	if not art.has("terrace"):
+		draw_rect(Rect2(-16, -16, 1312, 752), Color("#ffcf7a", 0.12))
+		for k in range(27):
+			var x := -16.0 + k * 50.0
+			draw_colored_polygon(PackedVector2Array([Vector2(x, 140), Vector2(x + 50, 140), Vector2(x + 50, 156), Vector2(x, 156)]), SAKURA if k % 2 == 0 else CREAM)
+			draw_circle(Vector2(x + 25, 156), 25, SAKURA if k % 2 == 0 else CREAM, true, -1.0, true)
+	if battle.level.get("boss", false):
+		draw_rect(Rect2(-16, -16, 1312, 752), Color("#3a0f2c", 0.3))
+	elif battle.rain:
+		draw_rect(Rect2(-16, -16, 1312, 752), Color("#1d2b45", 0.3))
+	else:
+		draw_rect(Rect2(-16, -16, 1312, 752), Color(PLUM, 0.06))
+
+func draw_core_gauge() -> void:
+	var r := Rect2(24, 176, 178, 46)
+	if ui_time - core_hit_at < 0.35:
+		r.position.x += sin(ui_time * 70.0) * 4.0
+	var ratio := float(battle.core) / Battle.CORE_MAX
+	var color := MINT if ratio >= 0.8 else GOLD if ratio >= 0.4 else BERRY
+	box(r, WOOD, BERRY if ui_time - core_hit_at < 0.35 else GOLD_DEEP, 14, 2, 0.3)
+	heart(r.position + Vector2(24, 24), 13.0 * (1.0 + 0.25 * maxf(0.0, 1.0 - (ui_time - core_hit_at) / 0.3)), color)
+	label("吧台满意度", Rect2(r.position + Vector2(44, 3), Vector2(84, 22)), 12, CREAM, 0, 2)
+	label(str(battle.core), Rect2(r.position + Vector2(120, 3), Vector2(48, 22)), 16, color, END, 2)
+	var track := Rect2(r.position + Vector2(44, 28), Vector2(124, 10))
+	box(track, COCOA, Color.TRANSPARENT, 5)
+	if ratio > 0.0:
+		box(Rect2(track.position + Vector2(1, 1), Vector2((track.size.x - 2) * ratio, 8)), color, Color.TRANSPARENT, 4)
+
+func heart(c: Vector2, s: float, color: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in range(28):
+		var t := TAU * i / 28.0
+		var hx := 16.0 * pow(sin(t), 3)
+		var hy := -(13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t))
+		pts.append(c + Vector2(hx, hy) * s / 16.0)
+	draw_colored_polygon(pts, color)
+	pts.append(pts[0])
+	draw_polyline(pts, COCOA, maxf(1.5, s * 0.16), true)
+
+func draw_conveyor(row: int) -> void:
+	if not row in battle.conveyor_rows:
+		return
+	var y := lane_y(row)
+	var h := row_height()
+	var x0 := board_x(battle.conveyor_from) + 4.0
+	var x1 := board_x(battle.conveyor_to) - 4.0
+	var rev: bool = battle.reverse_until > battle.time
+	var band := Rect2(x0, y + h * 0.6, x1 - x0, h * 0.28)
+	box(band, Color("#3b3550", 0.85), SKY if rev else Color(CREAM, 0.55), 8, 2)
+	var span := band.size.x - 20.0
+	var dir := 1.0 if rev else -1.0
+	var mid := band.get_center().y
+	var half := band.size.y * 0.3
+	for k in range(int(span / 26.0)):
+		var px := band.position.x + 10.0 + fposmod(k * 26.0 + dir * battle.time * (70.0 if rev else 42.0), span)
+		var color := Color(SKY, 0.9) if rev else Color(GOLD, 0.75)
+		draw_polyline(PackedVector2Array([Vector2(px - dir * 5, mid - half), Vector2(px + dir * 5, mid), Vector2(px - dir * 5, mid + half)]), color, 3.0, true)
+
+func draw_residues(row: int) -> void:
+	for residue in battle.residues:
+		if residue.row != row:
+			continue
+		var alpha := clampf((float(residue.until) - battle.time) / 1.5, 0.0, 1.0)
+		var p := Vector2(board_x(residue.x), lane_y(row) + row_height() - 12)
+		ellipse(p, Vector2(24, 6), Color("#5a3522", 0.75 * alpha))
+		ellipse(p + Vector2(-8, -2), Vector2(5, 3), Color("#8a5a3c", alpha))
+		ellipse(p + Vector2(7, 1), Vector2(4, 2.5), Color("#8a5a3c", alpha))
+
+func draw_umbrellas(row: int) -> void:
+	for cell in battle.props:
+		if cell.y != row:
+			continue
+		var prop: Dictionary = battle.props[cell]
+		var c := cell_center(row, cell.x)
+		var h := row_height()
+		var base := Vector2(c.x, lane_y(row) + h - 10)
+		if prop.get("wall", false):
+			var left: float = prop.until - battle.time
+			var alpha := clampf(left / 1.2, 0.25, 1.0) if left < 1.2 else 1.0
+			if left < 1.2 and fmod(ui_time * 8.0, 1.0) < 0.3:
+				alpha *= 0.5
+			effect("paint_wall", Vector2(c.x, lane_y(row) + h * 0.5), Vector2(CELL - 10, h), alpha)
+			if prop.hp < prop.max:
+				hp_bar(Vector2(c.x - 22, lane_y(row) + h - 6), 44, float(prop.hp) / float(prop.max), Color("#b48cff"))
+			continue
+		ellipse(base, Vector2(22, 5), Color(PLUM, 0.5))
+		if prop.hp <= 0.0:
+			draw_line(base, base + Vector2(16, -h * 0.55), Color("#8a6a55"), 4.0, true)
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-4, -h * 0.5), base + Vector2(30, -h * 0.72), base + Vector2(34, -h * 0.4), base + Vector2(8, -h * 0.3)]), Color("#b9a69a"))
+			var pulse := 0.5 + 0.5 * sin(ui_time * 5.0)
+			var tag := Rect2(c + Vector2(-34, -h * 0.5 - 4), Vector2(68, 24))
+			box(tag, COCOA, GOLD if battle.power >= Battle.REPAIR_COST else Color(CREAM, 0.5), 12, 2)
+			label("修复 %d" % Battle.REPAIR_COST, tag, 13, Color(GOLD, 0.7 + 0.3 * pulse), MID, 2)
+			continue
+		var hit: bool = battle.time - float(prop.hit) < 0.12
+		var top := base + Vector2(0, -h * 0.68)
+		draw_line(base, top, COCOA, 5.0, true)
+		draw_line(base, top, Color("#c8a27a"), 2.5, true)
+		var radius := 40.0
+		var steps := 6
+		for k in range(steps):
+			var a0 := PI + PI * k / steps
+			var a1 := PI + PI * (k + 1) / steps
+			var pts := PackedVector2Array([top + Vector2(0, -2)])
+			for j in range(5):
+				var a := lerpf(a0, a1, j / 4.0)
+				pts.append(top + Vector2(cos(a) * radius, sin(a) * radius * 0.55 + 14))
+			var color := (SAKURA if k % 2 == 0 else CREAM)
+			draw_colored_polygon(pts, Color(1.0, 0.7, 0.7) * color if hit else color)
+		draw_arc(top + Vector2(0, 14), radius, PI, TAU, 24, COCOA, 2.5, true)
+		draw_circle(top + Vector2(0, -4), 4, GOLD_DEEP, true, -1.0, true)
+		if prop.hp < prop.max:
+			hp_bar(Vector2(c.x - 22, lane_y(row) + h - 6), 44, float(prop.hp) / float(prop.max), GOLD)
+
+func draw_weather() -> void:
+	if battle.rain:
+		for i in range(80):
+			var x := fposmod(i * 97.0 - battle.time * 160.0, 1320.0) - 20.0
+			var y := fposmod(i * 53.0 + battle.time * 820.0, 760.0) - 20.0
+			draw_line(Vector2(x, y), Vector2(x - 6, y + 18), Color(0.82, 0.9, 1.0, 0.38), 1.5, true)
+	if battle.blackout_until > battle.time:
+		var left: float = battle.blackout_until - battle.time
+		draw_rect(Rect2(-16, -16, 1312, 752), Color(0.04, 0.02, 0.08, 0.42 + 0.08 * sin(ui_time * 30.0)))
+		var tag := Rect2(500, 400, 280, 50)
+		box(tag, COCOA, GOLD, 25, 3)
+		glyph("bolt", tag.position + Vector2(32, 25), 13, GOLD)
+		label("停电中 %.1f 秒" % left, Rect2(tag.position + Vector2(50, 0), Vector2(220, 50)), 20, GOLD, MID, 2)
+
+func draw_status(tower: Dictionary, x: float, y: float, h: float) -> void:
+	var t: float = battle.time
+	if tower.audit > t:
+		for angle in [0.35, -0.35]:
+			draw_set_transform(cam + Vector2(x, y + h * 0.45), angle)
+			box(Rect2(-46, -7, 92, 14), Color("#e0405f"), COCOA, 3, 2)
+			draw_set_transform(cam)
+		var tag := Rect2(x - 46, y - 8, 92, 22)
+		box(tag, COCOA, BERRY, 11, 2)
+		label("点我撕封条 %d/3" % tower.taps, tag, 12, TEXT, MID, 2)
+	elif tower.emp > t:
+		for k in range(3):
+			var a := ui_time * 9.0 + k * TAU / 3.0
+			var p := Vector2(x + cos(a) * 26.0, y + h * 0.45 + sin(a) * 16.0)
+			draw_polyline(PackedVector2Array([p, p + Vector2(5, 6), p + Vector2(-2, 9), p + Vector2(4, 16)]), SKY, 2.5, true)
+		label("瘫痪", Rect2(x - 30, y - 6, 60, 20), 13, SKY, MID, 2, 4, COCOA)
+	elif tower.blind > t:
+		for k in range(3):
+			var a := ui_time * 6.0 + k * TAU / 3.0
+			star(Vector2(x + cos(a) * 20.0, y + 4 + sin(a) * 5.0), 6, GOLD, COCOA, 1.5, a)
+	if t >= tower.boost and t < tower.cool:
+		for k in range(3):
+			var age := fposmod(ui_time * 1.4 + k * 0.33, 1.0)
+			draw_circle(Vector2(x - 10 + k * 10, y + 10 - age * 26), 5 + age * 5, Color(0.9, 0.9, 0.95, 0.5 * (1.0 - age)), true, -1.0, true)
+		label("过热", Rect2(x - 30, y + h - 28, 60, 18), 12, CREAM, MID, 2, 4, COCOA)
+	if tower.trap > t:
+		for k in range(4):
+			var a := ui_time * 4.0 + k * TAU / 4.0
+			var p := Vector2(x + cos(a) * 30.0, y + h * 0.55 + sin(a) * 9.0)
+			draw_circle(p, 6, COCOA, true, -1.0, true)
+			draw_circle(p, 4.5, GOLD, true, -1.0, true)
+		label("被挖角", Rect2(x - 32, y - 6, 64, 20), 12, GOLD, MID, 2, 4, COCOA)
+
+func tool_button(icon: String, c: Vector2, action: Callable, active: bool, caption: String, wait: float, cooldown: float, affordable: bool) -> void:
+	round_button(icon, c, 30, action, active, caption)
+	if wait > 0.0:
+		draw_circle(c, 27, Color(PLUM, 0.62), true, -1.0, true)
+		draw_arc(c, 31, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - wait / cooldown), 36, GOLD, 4.0, true)
+		label(str(ceili(wait)), Rect2(c - Vector2(20, 12), Vector2(40, 24)), 17, TEXT, MID, 2, 4, PLUM)
+	elif not affordable:
+		draw_circle(c + Vector2(21, -21), 7, BERRY, true, -1.0, true)
+
+# ---------------------------------------------------------------- 美术占位：art/ 里没有对应图片时画这些
+
+func figure(key: String, rect: Rect2, tint: Color) -> void:
+	var base := key.trim_suffix("_act")
+	var acting := key.ends_with("_act")
+	match base:
+		"mistral": cup_mascot(rect, tint, true, acting)
+		"doubao": cup_mascot(rect, tint, false, acting)
+		"drone": drone_figure(rect, tint)
+		"influencer":
+			sprite("clerk", rect, tint * Color(1.0, 0.78, 0.92))
+			glyph("cup", rect.position + rect.size * Vector2(0.3, 0.55), rect.size.x * 0.1, Color(COCOA, tint.a))
+		"sweeper": sprite("robot", rect, tint * Color(1.0, 0.55, 0.5))
+		"hacker": sprite("stealth", rect, tint * Color(0.55, 1.0, 0.7))
+		"victor": sprite("advisor", rect, tint * Color(0.75, 0.55, 0.6))
+		"mistral_shot":
+			var c := rect.get_center()
+			var s := rect.size.y * 0.4
+			draw_colored_polygon(PackedVector2Array([c + Vector2(s * 1.6, 0), c + Vector2(0, -s * 0.6), c + Vector2(-s * 1.2, 0), c + Vector2(0, s * 0.6)]), Color(SKY, tint.a))
+			draw_line(c + Vector2(-s * 2.4, 0), c + Vector2(-s, 0), Color(1, 1, 1, 0.6 * tint.a), s * 0.4, true)
+		"doubao_fx":
+			var c := rect.get_center()
+			heart(c, rect.size.y * 0.3, Color(1, 1, 1, 0.85 * tint.a))
+			heart(c + Vector2(rect.size.x * 0.3, -rect.size.y * 0.2), rect.size.y * 0.12, Color(SAKURA, tint.a))
+		_:
+			box(rect.grow(-6), Color(CREAM, 0.6 * tint.a), COCOA, 8, 2)
+
+# 新店员的占位吉祥物：冷萃杯 / 拉花杯，带一张小脸。
+func cup_mascot(rect: Rect2, tint: Color, cold: bool, acting: bool) -> void:
+	var w := minf(rect.size.x * 0.62, rect.size.y * 0.7)
+	var h := w * (1.25 if cold else 0.95)
+	var bottom := Vector2(rect.get_center().x, rect.end.y - 2)
+	var top_y := bottom.y - h
+	var body := PackedVector2Array([Vector2(bottom.x - w * 0.5, top_y), Vector2(bottom.x + w * 0.5, top_y),
+		Vector2(bottom.x + w * (0.36 if cold else 0.42), bottom.y), Vector2(bottom.x - w * (0.36 if cold else 0.42), bottom.y)])
+	var glass := Color(0.85, 0.95, 1.0, 0.9) if cold else Color("#fff3e6")
+	draw_colored_polygon(body, glass * tint)
+	if cold:
+		draw_colored_polygon(PackedVector2Array([Vector2(bottom.x - w * 0.46, top_y + h * 0.25), Vector2(bottom.x + w * 0.46, top_y + h * 0.25),
+			Vector2(bottom.x + w * 0.36, bottom.y), Vector2(bottom.x - w * 0.36, bottom.y)]), Color("#6b3f2a") * tint)
+		for k in range(3):
+			box(Rect2(bottom.x - w * 0.32 + k * w * 0.22, top_y + h * 0.18 + (k % 2) * 6, w * 0.18, w * 0.18), Color(0.8, 0.95, 1.0, 0.85 * tint.a), Color.TRANSPARENT, 3)
+		draw_line(Vector2(bottom.x + w * 0.2, top_y - h * 0.3), Vector2(bottom.x + w * 0.05, bottom.y - h * 0.3), Color(SKY, tint.a), 4.0, true)
+		star(Vector2(bottom.x - w * 0.42, top_y), w * 0.16, Color(1, 1, 1, tint.a), COCOA, 1.5)
+	else:
+		ellipse(Vector2(bottom.x, top_y + 2), Vector2(w * 0.5, w * 0.14), Color("#f4e1c8") * tint)
+		heart(Vector2(bottom.x, top_y + 2), w * 0.1, Color(1, 1, 1, tint.a))
+		draw_arc(Vector2(bottom.x + w * 0.5, top_y + h * 0.45), w * 0.18, -1.4, 1.4, 12, Color(COCOA, tint.a), 3.0, true)
+		box(Rect2(bottom.x - w * 0.25, top_y - w * 0.32, w * 0.5, w * 0.16), Color(SAKURA, tint.a), Color.TRANSPARENT, 4)
+	body.append(body[0])
+	draw_polyline(body, Color(COCOA, tint.a), 2.5, true)
+	var face := Vector2(bottom.x, bottom.y - h * 0.42)
+	for side in [-1.0, 1.0]:
+		draw_circle(face + Vector2(side * w * 0.16, 0), w * 0.06, Color(COCOA, tint.a), true, -1.0, true)
+		draw_circle(face + Vector2(side * w * 0.16 + w * 0.02, -w * 0.02), w * 0.02, Color(1, 1, 1, tint.a), true, -1.0, true)
+		draw_circle(face + Vector2(side * w * 0.27, w * 0.08), w * 0.05, Color(SAKURA, 0.6 * tint.a), true, -1.0, true)
+	draw_arc(face + Vector2(0, w * 0.06), w * 0.06, 0.2, PI - 0.2, 8, Color(COCOA, tint.a), 2.0, true)
+	if acting:
+		star(Vector2(bottom.x + w * 0.7, face.y - h * 0.2), w * 0.18, Color(SKY if cold else SAKURA, tint.a), COCOA, 1.5, ui_time * 6.0)
+
+func drone_figure(rect: Rect2, tint: Color) -> void:
+	var c := rect.get_center()
+	var s := minf(rect.size.x, rect.size.y) * 0.32
+	for side in [-1.0, 1.0]:
+		draw_line(c, c + Vector2(side * s * 1.3, -s * 0.7), Color(COCOA, tint.a), 4.0, true)
+		var spin := absf(sin(ui_time * 40.0 + side))
+		ellipse(c + Vector2(side * s * 1.3, -s * 0.8), Vector2(s * 0.9 * (0.3 + 0.7 * spin), s * 0.15), Color(0.9, 0.9, 0.9, 0.7 * tint.a))
+	draw_circle(c, s, COCOA * Color(1, 1, 1, tint.a), true, -1.0, true)
+	draw_circle(c, s - 3, Color("#ffcf3d") * tint, true, -1.0, true)
+	box(Rect2(c + Vector2(-s * 0.7, -s * 0.25), Vector2(s * 1.0, s * 0.4)), Color(COCOA, tint.a), Color.TRANSPARENT, 4)
+	draw_circle(c + Vector2(-s * 0.45, -s * 0.05), s * 0.12, Color(BERRY, tint.a), true, -1.0, true)
+	box(Rect2(c + Vector2(-s * 0.45, s * 0.85), Vector2(s * 0.9, s * 0.7)), Color("#c98b5a") * tint, COCOA, 3, 2)
+
+
+# mini 附属炮台：和主力同格时缩小站在右下角，单独放时站在格子中间。
+func draw_mini(row: int, col: int, unit: Dictionary, shared: bool) -> void:
+	var card: Dictionary = Campaign.CARDS[unit.card]
+	var y := lane_y(row)
+	var h := row_height()
+	var x := board_x(col + (0.74 if shared else 0.5))
+	var w := (CELL * 0.48) if shared else CELL * 0.7
+	var hgt := (h * 0.58) if shared else h * 0.78
+	var born: float = battle.time - float(unit.get("born", -9.0))
+	var scale := Vector2.ONE
+	if born < 0.3:
+		var k := ease_back(born / 0.3)
+		scale = Vector2(k, k)
+	var tint := Color.WHITE
+	if battle.time - unit.hit < 0.12:
+		tint = Color(1.0, 0.6, 0.6)
+	elif battle.idle_reason(unit) != "":
+		tint = Color(0.72, 0.7, 0.78)
+	var bob := sin(battle.time * 4.0 + col * 1.3 + row) * 1.5
+	var rect := Rect2(x - w * 0.5, y + h - hgt - 4 + bob, w, hgt)
+	ellipse(Vector2(x, y + h - 8), Vector2(w * 0.32, 4), Color(PLUM, 0.5))
+	sprite_at(card.key, rect, tint, scale, Vector2(x, rect.end.y))
+	if battle.time - unit.cast < 0.25 and unit.card in [17, 19, 20]:
+		effect(SHOT_ART[unit.card], Vector2(x + w * 0.4, y + h * 0.55), Vector2(30, 20), 1.0 - (battle.time - unit.cast) / 0.25)
+	if unit.hp < card.hp:
+		hp_bar(Vector2(x - 16, y + h - 6), 32, float(unit.hp) / float(card.hp), ACCENTS[unit.card])
+	if unit.blind > battle.time or unit.emp > battle.time:
+		star(Vector2(x, rect.position.y), 5, GOLD if unit.blind > battle.time else SKY, COCOA, 1.5, ui_time * 5.0)
