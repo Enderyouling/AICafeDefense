@@ -1,10 +1,11 @@
 extends SceneTree
 # 战斗规则自动化测试。运行：
 #   godot --headless --path . -s res://tools/battle_tests.gd
-# 覆盖开发文档里的 TC-01 ~ TC-04、第 02 章与第 03 章各项机制，以及第 01 章与改动前版本的逐帧对比。
+# 覆盖开发文档里的 TC-01 ~ TC-04、第 02 章与第 03 章各项机制、商店限定 SP、金币与经济曲线，以及第 01 章与改动前版本的逐帧对比。
 
 const Battle = preload("res://battle.gd")
 const Campaign = preload("res://campaign.gd")
+const Main = preload("res://main.gd")
 const ORIGINAL := "res://_旧版备份/完整版原始脚本/battle.gd"
 var failures := 0
 
@@ -49,6 +50,7 @@ func _init() -> void:
 	tc04()
 	mechanics()
 	chapter_three()
+	shop_and_sp()
 	regression()
 	print("\n%s：%d 项失败" % ["全部通过" if failures == 0 else "有失败", failures])
 	quit(failures)
@@ -535,6 +537,154 @@ func chapter_three() -> void:
 	z.skill = INF
 	run(b, 4.1)
 	check("赛勒斯三阶段：4 秒没撕掉，店员被收购变成来客", b.towers[1][1] == null and count_kind(b, "C") == 1)
+
+# ---------------------------------------------------------------- 金币、商店与商店限定 SP
+
+# 旧版配卡页的推荐阵容（第 01 章按关卡，第 02、03 章用 main.gd 的推荐表），只算当时已经解锁的店员。
+func designed_lineup(s: int) -> Array:
+	if s >= Campaign.CHAPTER_STARTS[2]:
+		return Main.CHAPTER_THREE_LINEUPS[s - Campaign.CHAPTER_STARTS[2]]
+	if s >= Campaign.CHAPTER_STARTS[1]:
+		return Main.CHAPTER_TWO_LINEUPS[s - Campaign.CHAPTER_STARTS[1]]
+	var sug := [0, 1, 2, 3, 4]
+	if s == 0:
+		sug = [0]
+	elif s == 7 or s == 8:
+		sug = [0, 1, 2, 4, 5]
+	elif s >= 9:
+		sug = [0, 1, 4, 5, 6]
+		if s == 11:
+			sug = [0, 1, 4, 6, 7]
+		elif s in [9, 15, 18]:
+			sug = [0, 1, 3, 4, 6]
+	return sug.filter(func(c): return Campaign.available(c, s))
+
+func hit_count(b, card: int) -> int:
+	var n := 0
+	for e in b.events:
+		if e.type == "hit" and e.card == card:
+			n += 1
+	return n
+
+func shop_and_sp() -> void:
+	check("商店：39 位店员都有价格，自带的 4 位免费", Campaign.CARDS.size() == 39 and Campaign.PRICES.size() == 39 and Campaign.UNLOCKS.size() == 39
+		and Campaign.START_CARDS.all(func(c): return Campaign.PRICES[c] == 0))
+	# 金币奖励
+	var base := Campaign.base_reward(5)
+	check("金币：首次通关一星拿基础奖励，三星首通拿双倍", Campaign.gold_reward(5, 0, 1, true, 20) == base and Campaign.gold_reward(5, 0, 3, true, 20) == base * 2)
+	check("金币：一星升三星补两次一半，重玩没有新星拿四分之一", Campaign.gold_reward(5, 1, 3, true, 20) == base and Campaign.gold_reward(5, 3, 3, true, 20) == base / 4)
+	check("金币：失败按击退数给，最多四分之一", Campaign.gold_reward(5, 0, 0, false, 4) == 12 and Campaign.gold_reward(5, 0, 0, false, 999) == base / 4)
+	check("卡槽：开局 4 个，第 5~7 个依次涨价，满了买不了", Campaign.slot_price(4) == 250 and Campaign.slot_price(6) == 4000 and Campaign.slot_price(7) == -1)
+	# 老存档迁移
+	var fresh := []
+	fresh.resize(Campaign.levels.size())
+	fresh.fill(0)
+	var start := Campaign.migrate(fresh)
+	check("迁移：新玩家只有自带的 4 位店员、4 个卡槽、0 金币", start.owned.count(true) == 4 and start.slots == 4 and start.gold == 0)
+	var veteran := fresh.duplicate()
+	for i in range(25):
+		veteran[i] = 2
+	var moved := Campaign.migrate(veteran)
+	check("迁移：老存档送回已解锁的店员、6 个卡槽，每颗星 40 金币", moved.owned[8] and moved.owned[10] and not moved.owned[11] and not moved.owned[16] and not moved.owned[21] and not moved.owned[35]
+		and moved.slots == 6 and moved.gold == 50 * 40)
+	# 经济曲线：每关只首通一星（没有任何额外星星），也买得起每关推荐阵容里的店员和卡槽。
+	var owned := Campaign.START_CARDS.duplicate()
+	var slots := Campaign.START_SLOTS
+	var gold := 0
+	var lowest := 0
+	var short := ""
+	for s in range(Campaign.levels.size()):
+		if s == 21:
+			continue
+		var need := designed_lineup(s)
+		for c in need:
+			if not c in owned:
+				gold -= Campaign.PRICES[c]
+				owned.append(c)
+		while slots < need.size():
+			gold -= Campaign.slot_price(slots)
+			slots += 1
+		if gold < lowest:
+			lowest = gold
+			short = Campaign.code(s)
+		gold += Campaign.gold_reward(s, 0, 1, true, 0)
+	check("经济曲线：只靠首通一星，也买得起每关推荐的店员和卡槽", lowest >= 0, "最缺 %d（%s）" % [lowest, short])
+	# 第 02、03 章的店员带进第 01 章也照常工作
+	var b = blank(3, [32, 31, 0, 28])
+	put(b, 32, 1, 0)
+	b.spawn_enemy("C", 1, 4.0)
+	run(b, 2.0)
+	check("跨章节：Ministral 在第 01 章也会开火减速", b.enemies[0].hp < 82.0 and b.enemies[0].slow > 0.0)
+	b = blank(3, [0, 31])
+	var host := put(b, 0, 1, 2)
+	put(b, 31, 1, 2)
+	host.hp = 50.0
+	run(b, 1.0)
+	check("跨章节：Gemini Nano 在第 01 章也会回血", absf(host.hp - 54.0) < 0.1, "hp=%.2f" % host.hp)
+	b = blank(3, [28])
+	put(b, 28, 1, 0)
+	b.spawn_enemy("C", 1, 6.0)
+	b.enemies[0].root = INF
+	run(b, 1.4)
+	check("跨章节：天工光柱在第 01 章也会落下", b.enemies.is_empty())
+	# GPT-4o：光 → 冰 → 火
+	b = blank(22, [35])
+	put(b, 35, 2, 0)
+	b.spawn_enemy("N", 2, 5.0)
+	var prism: Dictionary = b.enemies[0]
+	prism.root = INF
+	b.events.clear()
+	var hits := 0
+	while hits < 3 and b.time < 10.0:
+		b.step(0.02)
+		hits += hit_count(b, 35)
+		b.events.clear()
+	check("GPT-4o：光 / 冰 / 火轮换，26 + 20 + 18 伤害", is_equal_approx(prism.hp, Campaign.ENEMIES["N"].hp - 64.0), "hp=%.1f" % prism.hp)
+	check("GPT-4o：冰弹减速、火弹点燃", prism.slow > 0.0 and prism.burn > b.time)
+	# Gemini Ultra：上下各两路
+	b = blank(22, [36])
+	put(b, 36, 2, 0)
+	for r in range(5):
+		b.spawn_enemy("C", r, 4.0)
+	run(b, 1.0)
+	var hurt := 0
+	for e in b.enemies:
+		if e.hp < 82.0:
+			hurt += 1
+	check("Gemini Ultra：中路一发打满 5 路", hurt == 5, "hurt=%d" % hurt)
+	b = blank(22, [36])
+	put(b, 36, 0, 0)
+	for r in range(5):
+		b.spawn_enemy("C", r, 4.0)
+	run(b, 1.0)
+	hurt = 0
+	for e in b.enemies:
+		if e.hp < 82.0:
+			hurt += 1
+	check("Gemini Ultra：在边路只打得到 3 路", hurt == 3, "hurt=%d" % hurt)
+	# Grok Heavy：三路爆炸
+	b = blank(22, [37])
+	put(b, 37, 2, 0)
+	b.spawn_enemy("C", 2, 4.0)
+	b.spawn_enemy("C", 1, 4.6)
+	b.spawn_enemy("C", 3, 3.4)
+	b.spawn_enemy("C", 0, 4.0)
+	for e in b.enemies:
+		e.root = INF
+	run(b, 1.2)
+	check("Grok Heavy：本路和相邻两路 1.3 格内都吃 80 伤害", is_equal_approx(b.enemies[0].hp, 2.0) and is_equal_approx(b.enemies[1].hp, 2.0)
+		and is_equal_approx(b.enemies[2].hp, 2.0) and is_equal_approx(b.enemies[3].hp, 82.0))
+	# Qwen-Max：贯穿整路，对护盾双倍
+	b = blank(22, [38])
+	put(b, 38, 2, 0)
+	b.spawn_enemy("C", 2, 3.0)
+	b.spawn_enemy("B", 2, 5.0)
+	b.spawn_enemy("C", 2, 7.0)
+	for e in b.enemies:
+		e.root = INF
+	run(b, 1.4)
+	check("Qwen-Max：巨扇贯穿整路，对护盾双倍", is_equal_approx(b.enemies[0].hp, 52.0) and is_equal_approx(b.enemies[2].hp, 52.0)
+		and is_equal_approx(b.enemies[1].shield, Campaign.ENEMIES["B"].shield - 60.0), "shield=%.1f" % b.enemies[1].shield)
 
 # ---------------------------------------------------------------- 第 01 章回归：新旧 battle.gd 逐帧对比
 

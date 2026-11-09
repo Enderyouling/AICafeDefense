@@ -44,12 +44,19 @@ const NANO := 31
 const MINISTRAL := 32
 const DOUBAO_LITE := 33
 const GLM_FLASH := 34
+# 商店限定 SP
+const GPT_4O := 35
+const ULTRA := 36
+const HEAVY := 37
+const QWEN_MAX := 38
 const SHOT_DAMAGE := {0: 29.0, 2: 21.0, 4: 25.0, 5: 31.0, MISTRAL: 55.0, HAILUO: 16.0, SPARK: 18.0, ERNIE: 12.0, LLAMA: 15.0, GPT_MINI: 10.0, FLASH: 6.0, TURBO: 12.0,
-	COPILOT: 10.0, SD: 22.0, KLING: 14.0, MINISTRAL: 8.0}
+	COPILOT: 10.0, SD: 22.0, KLING: 14.0, MINISTRAL: 8.0, GPT_4O: 26.0, ULTRA: 18.0, QWEN_MAX: 30.0}
 const SHOT_SPEED := {2: 6.3, 7: 6.3, MISTRAL: 10.5, HAILUO: 6.0, SPARK: 7.0, ERNIE: 9.0, LLAMA: 6.5, GPT_MINI: 8.0, FLASH: 12.0, TURBO: 8.0,
-	COPILOT: 9.0, SD: 7.0, KLING: 9.5, MINISTRAL: 9.0}
-const PIERCE_SHIELD := [5, TURBO]
-const IGNORE_ARMOR := [5, MISTRAL, R1, TURBO]
+	COPILOT: 9.0, SD: 7.0, KLING: 9.5, MINISTRAL: 9.0, GPT_4O: 8.0, ULTRA: 8.0, HEAVY: 5.5, QWEN_MAX: 8.5}
+# GPT-4o 的光 / 冰 / 火三种光弹各自的伤害。
+const PRISM_DAMAGE := [26.0, 20.0, 18.0]
+const PIERCE_SHIELD := [5, TURBO, QWEN_MAX]
+const IGNORE_ARMOR := [5, MISTRAL, R1, TURBO, QWEN_MAX]
 const BOSSES := ["X", "V", "M", "G", "Z"]
 const PASSIVE := [3, HAIKU, COPILOT, OPUS, NANO]
 # 第 03 章场景设施
@@ -130,7 +137,7 @@ func _init(id: int, lineup: Array):
 	deck.resize(Campaign.CARDS.size())
 	power = level.power
 	for card in range(Campaign.CARDS.size()):
-		deck[card] = deck[card] == true and Campaign.available(card, stage)
+		deck[card] = deck[card] == true
 		ready_at.append(0.0)
 	for lane in range(level.rows):
 		var row := []
@@ -173,7 +180,8 @@ func make_unit(card: int) -> Dictionary:
 
 # mini 附属炮台占格子的「副位」：可以和主力店员共存一格，也能单独放。
 func place(card: int, row: int, col: int) -> bool:
-	if result != 0 or not Campaign.available(card, stage) or not deck[card] or not valid(row, col) or blocked_cell(row, col):
+	# 能不能用只看这一局带了谁（deck）；店员是否拥有由 main.gd 在配卡时把关。
+	if result != 0 or card < 0 or card >= deck.size() or not deck[card] or not valid(row, col) or blocked_cell(row, col):
 		return false
 	var mini := Campaign.is_mini(card)
 	if (minis[row][col] if mini else towers[row][col]) != null:
@@ -398,14 +406,13 @@ func step(dt: float) -> void:
 	for i in range(impacts.size() - 1, -1, -1):
 		if time - impacts[i].born > 0.7:
 			impacts.remove_at(i)
-	if chapter >= 2:
-		for i in range(residues.size() - 1, -1, -1):
-			if residues[i].until <= time:
-				residues.remove_at(i)
-		for cell in props.keys():
-			if props[cell].get("wall", false) and (props[cell].until <= time or props[cell].hp <= 0.0):
-				props.erase(cell)
-				emit({"type": "wall_gone", "row": cell.y, "col": cell.x})
+	for i in range(residues.size() - 1, -1, -1):
+		if residues[i].until <= time:
+			residues.remove_at(i)
+	for cell in props.keys():
+		if props[cell].get("wall", false) and (props[cell].until <= time or props[cell].hp <= 0.0):
+			props.erase(cell)
+			emit({"type": "wall_gone", "row": cell.y, "col": cell.x})
 	while not next_spawn().is_empty() and next_spawn()[0] <= time:
 		var entry := next_spawn()
 		if stage >= 4 and wave > 0 and wave < entry[2]:
@@ -426,14 +433,11 @@ func step(dt: float) -> void:
 		spawn_enemy(entry[3], entry[1])
 		spawned += 1
 	resolve_warnings()
-	if chapter >= 2:
-		aura(dt)
-	if chapter == 3:
-		cloud_tick(dt)
+	aura(dt)
+	cloud_tick(dt)
 	fire()
 	move_shots(dt)
-	if chapter >= 2:
-		burn_tick(dt)
+	burn_tick(dt)
 	move_enemies(dt)
 	if result == 0 and next_spawn().is_empty() and enemies.is_empty():
 		result = 1
@@ -483,27 +487,25 @@ func interval(tower: Dictionary, row: int, col: int) -> float:
 		base /= 1.5
 	if tower.trap > time:
 		base *= 2.5
-	if chapter >= 2:
-		if near_doubao(row, col):
-			base *= 0.9
-		var helper = minis[row][col]
-		if helper != null and helper != tower and helper.card == FLASH:
-			base *= 0.8
-		if tower.get("groove", 0.0) > time:
-			base *= 0.87
+	if near_doubao(row, col):
+		base *= 0.9
+	var helper = minis[row][col]
+	if helper != null and helper != tower and helper.card == FLASH:
+		base *= 0.8
+	if tower.get("groove", 0.0) > time:
+		base *= 0.87
 	return base
 
 func fire() -> void:
 	for row in range(level.rows):
 		for col in range(COLS):
 			act(towers[row][col], row, col, false)
-			if chapter >= 2:
-				act(minis[row][col], row, col, true)
+			act(minis[row][col], row, col, true)
 
 func act(tower, row: int, col: int, mini: bool) -> void:
 	if tower == null or tower.card in PASSIVE:
 		return
-	if chapter >= 2 and idle_reason(tower) != "":
+	if idle_reason(tower) != "":
 		return
 	if tower.card == KLING and tower.burst > 0 and time >= tower.burst_at:
 		tower.burst -= 1
@@ -539,20 +541,23 @@ func act(tower, row: int, col: int, mini: bool) -> void:
 		GLM_FLASH: cast = flashlight(row, col)
 		_:
 			cast = false
-			var first := maxi(0, row - 1) if tower.card == 4 else row
-			var last := mini(level.rows - 1, row + 1) if tower.card == 4 else row
+			var spread := 1 if tower.card == 4 else 2 if tower.card == ULTRA else 0
+			var first := maxi(0, row - spread)
+			var last := mini(level.rows - 1, row + spread)
 			var reach := 3.0 if tower.card == FLASH else 99.0
 			for lane in range(first, last + 1):
 				if target_in_lane(lane, col + 0.49, col + reach):
 					shots.append({"card": tower.card, "row": lane, "x": col + 0.63, "born": time, "src": Vector2i(col, row), "mini": mini,
-						"pierce": tower.card == HAILUO, "hits": []})
+						"pierce": tower.card in [HAILUO, QWEN_MAX], "hits": [], "elem": tower.hits % 3})
 					cast = true
 			if cast:
+				if tower.card == GPT_4O:
+					tower.hits += 1
 				emit({"type": "fire", "card": tower.card, "row": row, "col": col, "mini": mini})
 				if tower.card == KLING:
 					tower.burst = 2
 					tower.burst_at = time + 0.15
-				if chapter == 3 and not mini:
+				if not mini:
 					copilot_assist(row, col)
 	if cast:
 		tower.cast = time
@@ -667,6 +672,19 @@ func move_shots(dt: float) -> void:
 				for j in range(enemies.size() - 1, -1, -1):
 					if enemies[j].row == shot.row and absf(enemies[j].x - x) <= 1.05:
 						damage(j, 72.0, 7, src)
+			elif shot.card == HEAVY:
+				# Grok Heavy：本路和相邻两路 1.3 格内全部吃到爆炸。
+				emit({"type": "boom", "row": shot.row, "x": x, "heavy": true})
+				for j in range(enemies.size() - 1, -1, -1):
+					if absi(enemies[j].row - shot.row) <= 1 and absf(enemies[j].x - x) <= 1.3:
+						damage(j, 80.0, HEAVY, src)
+			elif shot.card == GPT_4O:
+				var elem: int = shot.get("elem", 0)
+				if elem == 1:
+					hit.slow = maxf(hit.slow, 2.5)
+				elif elem == 2 and not hit.kind in ["V", "Z"]:
+					hit.burn = time + 4.0
+				damage(target, PRISM_DAMAGE[elem], GPT_4O, src, shot.mini)
 			else:
 				if shot.card == ERNIE:
 					hit.mark = time + 5.0
@@ -731,7 +749,7 @@ func damage(index: int, value: float, card: int, src: Vector2i = Vector2i(-1, -1
 				froze = true
 	if enemy.mark > time:
 		value *= 1.25
-	if chapter == 3 and card != COPILOT and valid(src.y, src.x) and near_copilot(src.y, src.x):
+	if card != COPILOT and valid(src.y, src.x) and near_copilot(src.y, src.x):
 		value *= 1.2
 	var shielded := false
 	var broke := false
@@ -1120,7 +1138,7 @@ func move_enemies(dt: float) -> void:
 		var col := floori(enemy.x - 0.2)
 		var tower = towers[row][col] if valid(row, col) and not enemy.fly else null
 		var helper = null
-		if tower == null and chapter >= 2 and valid(row, col) and not enemy.fly:
+		if tower == null and valid(row, col) and not enemy.fly:
 			helper = minis[row][col]
 		var umbrella = null
 		if tower == null and helper == null and not enemy.fly and props.has(Vector2i(col, row)) and props[Vector2i(col, row)].hp > 0.0:

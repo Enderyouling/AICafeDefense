@@ -5,6 +5,7 @@ const Battle = preload("res://battle.gd")
 const Campaign = preload("res://campaign.gd")
 const SAVE := "user://progress.dat"
 const AUDIO_PREF := "user://audio-setting.txt"
+const WALLET := "user://wallet.dat"
 const UI_FONT = preload("res://art/NotoSansSC.ttf")
 const WEIGHT_AXIS := 2003265652
 const SIZE := Vector2(1280, 720)
@@ -32,7 +33,8 @@ const ACCENTS := [Color("#b58bff"), Color("#ffb03f"), Color("#45b4ff"), Color("#
 	Color("#ff9f43"), Color("#c98b5a"), Color("#3fcfc0"), Color("#ff6b3d"), Color("#6c7cff"), Color("#f5b82e"), Color("#d4a373"), Color("#b48cff"),
 	Color("#2f6bff"), Color("#c7a6ff"), Color("#ff9a6a"), Color("#a99cff"), Color("#7d8dff"),
 	Color("#4f9dff"), Color("#22b8b0"), Color("#ff6fb1"), Color("#9fd4ff"), Color("#a46bff"), Color("#ffbf3d"), Color("#3ad1ff"),
-	Color("#5a7dff"), Color("#e0884f"), Color("#8c7bff"), Color("#6fdc9f"), Color("#ffa94d"), Color("#ff9fb8"), Color("#5cc8ff")]
+	Color("#5a7dff"), Color("#e0884f"), Color("#8c7bff"), Color("#6fdc9f"), Color("#ffa94d"), Color("#ff9fb8"), Color("#5cc8ff"),
+	Color("#f2b13c"), Color("#4f7bff"), Color("#ff7a3d"), Color("#c46bff")]
 const ARENAS := {"arena": ["门口", Color("#ff8db3")], "hall": ["主厅", Color("#e0965a")], "night": ["夜班", Color("#8a7bff")],
 	"kitchen": ["后厨", Color("#ff7b5c")], "core": ["核心区", Color("#2fc4b2")], "terrace": ["露台", Color("#f0a13a")],
 	"cloud": ["云端", Color("#5b8cff")]}
@@ -53,15 +55,15 @@ const PAGE_SIZE := 6
 const PHASE_NAMES := ["", "金牌接管", "封条封场", "影子加班"]
 const SHOT_ART := {0: "gpt_shot", 2: "deepseek_shot", 4: "gemini_shot", 5: "qwen_shot", 7: "grok_shot", 8: "mistral_shot", 10: "hailuo_shot",
 	11: "spark_shot", 12: "ernie_shot", 14: "llama_shot", 17: "gpt_shot", 19: "gemini_shot", 20: "qwen_shot",
-	21: "gemini_shot", 25: "sd_shot", 27: "kling_shot", 32: "mistral_shot"}
+	21: "gemini_shot", 25: "sd_shot", 27: "kling_shot", 32: "mistral_shot", 35: "gpt_shot", 36: "gemini_shot", 37: "grok_shot", 38: "qwen_shot"}
 const SMALL_SHOTS := [17, 19, 20, 21, 32]
 # impacts 的 kind 就是卡牌编号；9、10 被第 01 章的封印和光环占用，所以新卡的命中特效从这里查。
 const HIT_ART := {0: "gpt_hit", 2: "deepseek_hit", 4: "gpt_hit", 5: "qwen_shot", 7: "grok_hit", 8: "mistral_shot", 9: "warning_fx", 10: "kimi_fx",
 	11: "spark_shot", 12: "ernie_shot", 14: "llama_shot", 17: "gpt_hit", 20: "qwen_shot", 110: "hailuo_shot",
-	21: "gpt_hit", 25: "sd_shot", 27: "kling_shot", 32: "mistral_shot"}
+	21: "gpt_hit", 25: "sd_shot", 27: "kling_shot", 32: "mistral_shot", 35: "gpt_hit", 36: "gpt_hit", 37: "grok_hit", 138: "qwen_shot"}
 const SHOT_SFX := {0: "shot_gpt", 2: "shot_water", 4: "shot_gemini", 5: "shot_qwen", 7: "shot_grok", 8: "shot_ice", 9: "whisk", 10: "conch",
 	11: "fireball", 12: "brush", 14: "wool", 15: "paint", 17: "shot_gpt", 19: "zap", 20: "shot_qwen",
-	21: "zap", 25: "brush", 27: "burst", 32: "shot_ice"}
+	21: "zap", 25: "brush", 27: "burst", 32: "shot_ice", 35: "shot_gpt", 36: "shot_gemini", 37: "shot_grok", 38: "shot_qwen"}
 # 每个音效的基础音量（dB），播放时还可以再加偏移。
 const SFX_DB := {"click": -11.0, "select": -9.0, "deny": -10.0, "page": -8.0, "toggle": -9.0,
 	"deploy": -5.0, "remove": -8.0, "collect": -6.0, "produce": -13.0, "supply": -6.0,
@@ -75,7 +77,7 @@ const SFX_DB := {"click": -11.0, "select": -9.0, "deny": -10.0, "page": -8.0, "t
 	"conch": -15.0, "fireball": -15.0, "brush": -14.0, "wool": -14.0, "zap": -20.0, "paint": -9.0, "think": -10.0, "beam": -5.0, "steal": -8.0,
 	"search": -11.0, "pulse": -9.0, "rewind": -7.0, "diffuse": -12.0, "hug": -8.0, "burst": -16.0, "orbital": -5.0, "reflect": -14.0,
 	"agent": -9.0, "gate": -5.0, "backup": -7.0, "restore": -6.0, "hop": -12.0, "lock": -8.0, "drain": -13.0, "phished": -6.0,
-	"bluescreen": -4.0, "acquire": -5.0, "storm": -5.0, "outage": -4.0, "bait": -13.0}
+	"bluescreen": -4.0, "acquire": -5.0, "storm": -5.0, "outage": -4.0, "bait": -13.0, "buy": -5.0, "coin": -7.0}
 const MUSIC_DB := -9.0
 const PETAL := [Vector2(0, -1), Vector2(0.55, -0.62), Vector2(0.62, 0.08), Vector2(0.32, 0.82), Vector2(0, 0.56),
 	Vector2(-0.32, 0.82), Vector2(-0.62, 0.08), Vector2(-0.55, -0.62)]
@@ -89,7 +91,8 @@ const CHAPTER_THREE_LINEUPS := [[0, 1, 8, 9, 21, 31], [0, 1, 8, 9, 22, 33], [0, 
 	[0, 1, 8, 9, 22, 24], [0, 1, 8, 22, 25, 26], [0, 1, 8, 22, 25, 29], [0, 1, 8, 22, 27, 29],
 	[0, 1, 22, 28, 29, 34], [0, 30, 8, 22, 27, 29], [0, 1, 8, 27, 29, 34], [0, 1, 22, 27, 28, 29]]
 const END := 2
-enum {TITLE, SELECT, BRIEF, PLAY, RESULT}
+enum {TITLE, SELECT, BRIEF, PLAY, RESULT, SHOP}
+const SHOP_TABS := ["店员", "SP 限定", "mini", "卡槽"]
 
 var state := TITLE
 var stage := 0
@@ -155,6 +158,17 @@ var beams: Array[Dictionary] = []
 var zaps: Array[Dictionary] = []
 var fx_sprites: Array[Dictionary] = []
 var brief_page := 0
+# 金币与商店
+var gold := 0
+var owned: Array = []
+var slots := Campaign.START_SLOTS
+var last_gold := 0
+var wallet_ok := true
+var shop_tab := 0
+var shop_focus := 0
+var shop_from := TITLE
+var shop_at := -10.0
+var coin_played := false
 
 func _ready() -> void:
 	rng.seed = 1107
@@ -187,6 +201,7 @@ func _ready() -> void:
 			loaded = read_progress(previous.path_join("AICafeDefenseTrial/progress.dat"))
 	if not loaded.is_empty():
 		stars = loaded
+	load_wallet()
 	setup_audio()
 	get_window().min_size = Vector2i(865, 486)
 	get_window().focus_exited.connect(func():
@@ -341,6 +356,127 @@ func record_win(score: int) -> bool:
 	stars = next
 	return true
 
+# ---------------------------------------------------------------- 金币、店员与卡槽
+
+# wallet.dat：金币、已拥有的店员、卡槽数。没有这个文件时（新玩家或老存档第一次打开新版）按关卡进度迁移。
+func load_wallet() -> void:
+	var data = read_wallet(WALLET)
+	if data == null:
+		data = read_wallet(WALLET + ".bak")
+	if data == null:
+		data = Campaign.migrate(stars)
+		gold = data.gold
+		owned = data.owned
+		slots = data.slots
+		save_wallet()
+		return
+	gold = data.gold
+	owned = data.owned
+	slots = data.slots
+
+func read_wallet(path: String):
+	if not FileAccess.file_exists(path):
+		return null
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY or parsed.get("format", "") != "AI-CAFE-WALLET/1":
+		return null
+	var list := []
+	list.resize(Campaign.CARDS.size())
+	list.fill(false)
+	for c in Campaign.START_CARDS:
+		list[c] = true
+	for value in parsed.get("owned", []):
+		var c := int(value)
+		if c >= 0 and c < list.size():
+			list[c] = true
+	return {"gold": maxi(0, int(parsed.get("gold", 0))), "owned": list,
+		"slots": clampi(int(parsed.get("slots", Campaign.START_SLOTS)), Campaign.START_SLOTS, Campaign.MAX_SLOTS)}
+
+func save_wallet() -> bool:
+	var ids := []
+	for c in range(owned.size()):
+		if owned[c]:
+			ids.append(c)
+	var text := JSON.stringify({"format": "AI-CAFE-WALLET/1", "gold": gold, "slots": slots, "owned": ids})
+	var file := FileAccess.open(WALLET + ".tmp", FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(text)
+	file.close()
+	if read_wallet(WALLET) != null and DirAccess.copy_absolute(WALLET, WALLET + ".bak") != OK:
+		return false
+	return DirAccess.rename_absolute(WALLET + ".tmp", WALLET) == OK
+
+func owns(card: int) -> bool:
+	return card >= 0 and card < owned.size() and owned[card]
+
+func open_shop(focus: int = -1) -> void:
+	if state != SHOP:
+		shop_from = state
+	if focus >= 0:
+		shop_tab = 1 if Campaign.CARDS[focus].get("tag", "") == "SP" else 2 if Campaign.is_mini(focus) else 0
+		shop_focus = focus
+	elif shop_focus < 0 or shop_focus >= Campaign.CARDS.size():
+		shop_focus = shop_items(shop_tab)[0]
+	state = SHOP
+	shop_at = ui_time
+	toast_until = 0.0
+
+func close_shop() -> void:
+	state = shop_from
+	sfx("page")
+
+func set_shop_tab(tab: int) -> void:
+	shop_tab = tab
+	var items := shop_items(tab)
+	shop_focus = items[0] if not items.is_empty() else -1
+	for c in items:
+		if not owns(c):
+			shop_focus = c
+			break
+
+func shop_items(tab: int) -> Array:
+	var list := []
+	if tab == 3:
+		return list
+	for c in range(Campaign.CARDS.size()):
+		var tag: String = Campaign.CARDS[c].get("tag", "")
+		if (tab == 0 and tag == "") or (tab == 1 and tag == "SP") or (tab == 2 and tag == "mini"):
+			list.append(c)
+	return list
+
+func focus_item(card: int) -> void:
+	shop_focus = card
+
+func buy_card(card: int) -> void:
+	if owns(card):
+		return
+	var price: int = Campaign.PRICES[card]
+	if gold < price:
+		power_deny = ui_time
+		notice("金币不足，还差 %d。" % (price - gold))
+		return
+	gold -= price
+	owned[card] = true
+	wallet_ok = save_wallet()
+	sfx("buy")
+	confetti()
+	notice("%s 加入了店员！" % Campaign.CARDS[card].name, false)
+
+func buy_slot() -> void:
+	var price := Campaign.slot_price(slots)
+	if price < 0:
+		return
+	if gold < price:
+		notice("金币不足，还差 %d。" % (price - gold))
+		return
+	gold -= price
+	slots += 1
+	wallet_ok = save_wallet()
+	sfx("buy")
+	confetti()
+	notice("卡槽 +1，现在可以带 %d 位店员。" % slots, false)
+
 # 第 01 章逐关解锁（1-20EX 在 1-20 之后）；第 02 章在通关 1-20 后开放。
 func is_unlocked(i: int) -> bool:
 	if i <= 0:
@@ -414,8 +550,14 @@ func open_stage(id: int) -> void:
 			suggested = [0, 1, 4, 6, 7]
 		elif id in [9, 15, 18]:
 			suggested = [0, 1, 3, 4, 6]
-	for i in range(loadout.size()):
-		loadout[i] = Campaign.available(i, id) and i in suggested
+	if id == 0:
+		suggested = [0]
+	loadout.fill(false)
+	var picked := 0
+	for c in suggested:
+		if owns(c) and picked < max_loadout():
+			loadout[c] = true
+			picked += 1
 	state = BRIEF
 	toast_until = 0.0
 
@@ -461,10 +603,16 @@ func finish() -> void:
 	rating = maxi(1, 3 - battle.robots.count(false))
 	if battle.chapter >= 2:
 		rating = 3 if battle.core >= Battle.CORE_MAX and battle.facility_uses > 0 else 2 if battle.core >= 80 else 1
+	var old_stars: int = stars[stage]
+	last_gold = Campaign.gold_reward(stage, old_stars, rating if battle.result == 1 else 0, battle.result == 1, battle.defeated)
 	save_ok = battle.result != 1 or record_win(rating)
+	if last_gold > 0:
+		gold += last_gold
+		wallet_ok = save_wallet()
 	state = RESULT
 	result_at = ui_time
 	stars_played = 0
+	coin_played = false
 	selected = -1
 	buttons.clear()
 	if battle.result == 1:
@@ -508,7 +656,7 @@ func _input(event: InputEvent) -> void:
 		if state == PLAY:
 			if event.keycode in [KEY_ESCAPE, KEY_SPACE]:
 				go_back()
-			elif not paused and event.keycode >= KEY_1 and event.keycode <= KEY_6:
+			elif not paused and event.keycode >= KEY_1 and event.keycode <= KEY_7:
 				var slot: int = event.keycode - KEY_1
 				var active := equipped()
 				if slot < active.size():
@@ -534,6 +682,9 @@ func go_back() -> void:
 	if state == PLAY:
 		paused = not paused
 		sfx("click")
+	elif state == SHOP:
+		state = shop_from
+		sfx("page")
 	elif state != TITLE:
 		state = TITLE if state == SELECT else SELECT
 		sfx("page")
@@ -692,6 +843,9 @@ func stage_art(id: int) -> String:
 		_: return "runner"
 
 func toggle_card(index: int) -> void:
+	if not owns(index):
+		open_shop(index)
+		return
 	if loadout[index]:
 		loadout[index] = false
 	elif loadout.count(true) < max_loadout():
@@ -700,15 +854,14 @@ func toggle_card(index: int) -> void:
 		notice("最多上阵 %d 位店员，先取消一张卡片。" % max_loadout())
 	brief_focus = index
 
-# 第 02 章可以多带一位（方便带上 mini 附属炮台）。
+# 能带几位店员由已购买的卡槽决定（教学关固定 1 位）。
 func max_loadout() -> int:
-	return 6 if Campaign.chapter(stage) >= 2 else 5
+	return 1 if stage == 0 else slots
 
-# 配卡页显示的卡牌：第 01 章只显示第 01 章的 8 位。
+# 配卡页显示全部店员（没买的显示价格，点了去商店）；教学关只显示自带的 4 位。
 func visible_cards() -> Array:
-	match Campaign.chapter(stage):
-		1: return range(8)
-		2: return range(21)
+	if stage == 0:
+		return Campaign.START_CARDS.duplicate()
 	return range(Campaign.CARDS.size())
 
 # ---------------------------------------------------------------- 战斗事件 → 音效与特效
@@ -787,7 +940,11 @@ func handle(e: Dictionary) -> void:
 				burst(p, ACCENTS[e.card], 4, 140.0, "dot", 0.25, 4.0)
 		"boom":
 			var p := lane_point(e.row, e.x)
-			sfx("boom", 0.0, 1.0, 0.08)
+			sfx("boom", 3.0 if e.get("heavy", false) else 0.0, 0.85 if e.get("heavy", false) else 1.0, 0.08)
+			if e.get("heavy", false):
+				ring(p, Color("#ff7a3d"), 260.0, 0.55)
+				burst(p, Color("#ff9a5a"), 16, 340.0, "star", 0.7, 8.0)
+				shake(0.3)
 			ring(p, GOLD, 120.0, 0.45)
 			burst(p, GOLD, 10, 270.0, "star", 0.55, 7.0)
 			burst(p, CREAM, 6, 90.0, "puff", 0.5, 16.0)
@@ -1228,13 +1385,16 @@ func ui_step(delta: float) -> void:
 		if ui_time - float(fx_sprites[i].at) > float(fx_sprites[i].life):
 			fx_sprites.remove_at(i)
 	step_parts(ui_parts, delta)
-	if state in [TITLE, SELECT, BRIEF]:
+	if state in [TITLE, SELECT, BRIEF, SHOP]:
 		update_petals(delta, 30 if state == TITLE else 18)
 	if battle != null:
 		if shown_power < battle.power:
 			shown_power = minf(battle.power, shown_power + maxf(1.0, (battle.power - shown_power) * 9.0 * delta))
 		else:
 			shown_power = battle.power
+	if state == RESULT and last_gold > 0 and not coin_played and ui_time - result_at > 0.6 + rating * 0.32:
+		coin_played = true
+		sfx("coin")
 	if state == RESULT and battle.result == 1:
 		var age := ui_time - result_at
 		while stars_played < rating and age > 0.5 + stars_played * 0.32:
@@ -1502,15 +1662,15 @@ func sprite_at(key: String, rect: Rect2, tint: Color, scale: Vector2, pivot: Vec
 	sprite(key, Rect2(rect.position - pivot, rect.size), tint)
 	draw_set_transform(cam)
 
-func effect(key: String, center: Vector2, bounds: Vector2, alpha: float = 1.0) -> void:
+func effect(key: String, center: Vector2, bounds: Vector2, alpha: float = 1.0, tint: Color = Color.WHITE) -> void:
 	if alpha <= 0.0:
 		return
 	if not art.has(key):
-		figure(key, Rect2(center - bounds * 0.5, bounds), Color(1, 1, 1, clampf(alpha, 0, 1)))
+		figure(key, Rect2(center - bounds * 0.5, bounds), Color(tint, clampf(alpha, 0, 1)))
 		return
 	var texture: Texture2D = art[key]
 	var size := texture.get_size() * minf(bounds.x / texture.get_width(), bounds.y / texture.get_height())
-	draw_texture_rect(texture, Rect2(center - size * 0.5, size), false, Color(1, 1, 1, clampf(alpha, 0, 1)))
+	draw_texture_rect(texture, Rect2(center - size * 0.5, size), false, Color(tint, clampf(alpha, 0, 1)))
 
 func backdrop(key: String, shade: float = 0.0) -> void:
 	draw_texture_rect(art[key], Rect2(Vector2.ZERO, SIZE), false)
@@ -1580,6 +1740,7 @@ func _draw() -> void:
 		RESULT:
 			draw_battle()
 			draw_result()
+		SHOP: draw_shop()
 	draw_parts(ui_parts)
 	if ui_time < toast_until and not (state == PLAY and paused):
 		var slide := (1.0 - ease_out((ui_time - toast_at) / 0.2)) * 24.0
@@ -1622,7 +1783,9 @@ func draw_title() -> void:
 	label("收集算力，叫店员上阵。", Rect2(94, 404, 620, 36), 23, TEXT, 0, 2, 7, PLUM)
 	label("别让资本怪客摸到吧台。", Rect2(94, 442, 620, 36), 23, TEXT, 0, 2, 7, PLUM)
 	candy("开始营业  ›", Rect2(92, 500, 254, 70), open_map.bind(true), 0, 25)
-	candy("退出游戏", Rect2(362, 500, 168, 70), get_tree().quit, 1)
+	candy("商店", Rect2(362, 500, 150, 70), open_shop.bind(-1), 2)
+	candy("退出游戏", Rect2(528, 500, 150, 70), get_tree().quit, 1)
+	gold_pill(Rect2(920, 38, 180, 46))
 	label("第 01 ~ 03 章 · 共 %d 关   ·   已通关 %d / %d" % [stars.size(), stars.size() - stars.count(0), stars.size()], Rect2(96, 648, 640, 30), 15, MUTED, 0, 1, 5, PLUM)
 	round_button("music", Vector2(1150, 60), 28, toggle_music, false, "音乐", not music_on)
 	round_button("sound", Vector2(1218, 60), 28, toggle_sfx, false, "音效", not sfx_on)
@@ -1683,6 +1846,8 @@ func draw_stages() -> void:
 			glyph("lock", tab.position + Vector2(20, 17), 7, INK_SOFT)
 		if not on:
 			buttons.append([tab, open_chapter.bind(n), "page"])
+	gold_pill(Rect2(590, 44, 180, 46))
+	candy("商店", Rect2(786, 40, 140, 54), open_shop.bind(-1), 2)
 	var badge := Rect2(950, 38, 276, 84)
 	paper(badge, 20)
 	star(Vector2(992, 80), 20, GOLD, COCOA, 2.5)
@@ -1781,14 +1946,16 @@ func draw_brief() -> void:
 			draw_badge(cards[k], Rect2(78.0 + (k % columns) * (width + 12.0), 230.0 + floorf(float(k) / columns) * 190.0, width, 176))
 	else:
 		if cards.size() > 21:
-			# 第 03 章：卡太多，分成「新店员」和「老店员」两页。
+			# 店员太多，每页 21 张；没买的店员显示价格，点了去商店。
 			for p in range(2):
-				var tab := Rect2(470 + p * 162, 188, 152, 30)
+				var tab := Rect2(300 + p * 124, 188, 116, 30)
 				var on := p == brief_page
 				box(tab, SAKURA if on else CREAM, COCOA, 15, 2)
-				label(["第 1·2 章店员", "第 3 章新店员"][p], tab, 14, TEXT if on else COCOA, MID, 2, 3 if on else 0, SAKURA_DEEP)
+				label(["No.1 – 21", "No.22 – %d" % cards.size()][p], tab, 14, TEXT if on else COCOA, MID, 2, 3 if on else 0, SAKURA_DEEP)
 				if not on:
 					buttons.append([tab, set_brief_page.bind(p), "page"])
+			candy("商店", Rect2(572, 184, 112, 38), open_shop.bind(-1), 2, 15)
+			gold_pill(Rect2(694, 186, 96, 34), true)
 			cards = cards.slice(21) if brief_page == 1 else cards.slice(0, 21)
 		var columns := 7
 		var width := (820.0 - (columns - 1) * 8.0) / columns
@@ -1803,13 +1970,13 @@ func draw_brief() -> void:
 	if not mobile:
 		tips += " · 1-%d 选卡  R 移除  空格 暂停" % max_loadout()
 		if Campaign.chapter(stage) == 3:
-			tips = "点卡片再点格子部署 · 1-6 选卡  R 移除  F 防火墙  B 云备份  空格 暂停"
+			tips = "点卡片再点格子部署 · 1-%d 选卡  R 移除  F 防火墙  B 云备份  空格 暂停" % max_loadout()
 	label(tips, Rect2(60, 648, 890, 36), 15, MUTED, 0, 1, 5, PLUM)
 
 func draw_badge(i: int, rect: Rect2) -> void:
 	var card: Dictionary = Campaign.CARDS[i]
 	var accent: Color = ACCENTS[i]
-	var available := Campaign.available(i, stage)
+	var available := owns(i)
 	var on: bool = loadout[i]
 	var hot := available and stage > 0 and rect.has_point(pointer)
 	var r := rect
@@ -1833,7 +2000,7 @@ func draw_badge(i: int, rect: Rect2) -> void:
 	if not available:
 		draw_circle(r.position + Vector2(r.size.x * 0.5, 78), 22, Color(COCOA, 0.8), true, -1.0, true)
 		glyph("lock", r.position + Vector2(r.size.x * 0.5, 78), 12, CREAM)
-		label(Campaign.code(Campaign.UNLOCKS[i]) + " 解锁", Rect2(r.position.x + 70, r.position.y + 6, r.size.x - 82, 26), 12, TEXT, END, 2, 3, Color(COCOA, 0.6))
+		label("商店购买", Rect2(r.position.x + 70, r.position.y + 6, r.size.x - 82, 26), 12, TEXT, END, 2, 3, Color(COCOA, 0.6))
 	elif on:
 		var tag := Rect2(r.end.x - 70, r.position.y - 10, 76, 28)
 		box(tag, SAKURA, COCOA, 14, 2)
@@ -1846,9 +2013,9 @@ func draw_badge(i: int, rect: Rect2) -> void:
 func draw_badge_small(i: int, rect: Rect2) -> void:
 	var card: Dictionary = Campaign.CARDS[i]
 	var accent: Color = ACCENTS[i]
-	var available := Campaign.available(i, stage)
+	var available := owns(i)
 	var on: bool = loadout[i]
-	var hot := available and rect.has_point(pointer)
+	var hot := rect.has_point(pointer)
 	if hot:
 		brief_focus = i
 	var r := rect
@@ -1875,7 +2042,12 @@ func draw_badge_small(i: int, rect: Rect2) -> void:
 	if not available:
 		draw_circle(r.position + Vector2(r.size.x * 0.5, 50), 16, Color(COCOA, 0.8), true, -1.0, true)
 		glyph("lock", r.position + Vector2(r.size.x * 0.5, 50), 9, CREAM)
-		label(Campaign.code(Campaign.UNLOCKS[i]) + " 解锁", Rect2(r.position.x, r.position.y + 62, r.size.x, 16), 10, TEXT, MID, 2, 3, Color(COCOA, 0.7))
+		var tag_rect := Rect2(r.position.x + 6, r.position.y + 62, r.size.x - 12, 17)
+		box(tag_rect, Color(COCOA, 0.82), Color.TRANSPARENT, 8)
+		coin(tag_rect.position + Vector2(12, 8.5), 5.5)
+		label(str(Campaign.PRICES[i]), Rect2(tag_rect.position + Vector2(20, 0), Vector2(tag_rect.size.x - 22, 17)), 11, GOLD, MID, 2)
+		if stage > 0:
+			buttons.append([rect, open_shop.bind(i), "click"])
 	elif on:
 		draw_circle(r.position + Vector2(r.size.x - 6, 4), 11, SAKURA, true, -1.0, true)
 		draw_circle(r.position + Vector2(r.size.x - 6, 4), 11, COCOA, false, 2.0, true)
@@ -2005,6 +2177,11 @@ func draw_result() -> void:
 		candy("返回关卡列表" if won and save_ok else "再试一局", Rect2(430, r.position.y + 334, 420, 64), retry, 0, 23)
 	candy("重玩本关" if won else "调整阵容", Rect2(430, r.position.y + 412, 204, 52), start_battle if won else open_stage.bind(stage), 1)
 	candy("返回选关", Rect2(646, r.position.y + 412, 204, 52), open_map, 1)
+	if last_gold > 0:
+		var pill := Rect2(520, r.end.y - 22, 240, 44)
+		box(pill, COCOA, GOLD, 22, 3, 0.3)
+		coin(pill.position + Vector2(28, 22), 13)
+		label("+%d 金币  ·  共 %d" % [last_gold, gold], Rect2(pill.position + Vector2(46, 0), Vector2(pill.size.x - 56, pill.size.y)), 17, GOLD, MID, 2)
 	draw_set_transform(Vector2.ZERO)
 
 # ---------------------------------------------------------------- 战斗画面
@@ -2069,7 +2246,7 @@ func draw_battle() -> void:
 		for col in range(9):
 			if battle.towers[row][col] != null:
 				draw_tower(row, col, battle.towers[row][col])
-			if terrace and battle.minis[row][col] != null:
+			if battle.minis[row][col] != null:
 				draw_mini(row, col, battle.minis[row][col], battle.towers[row][col] != null)
 		if battle.chapter == 3:
 			draw_fog(row)
@@ -2120,6 +2297,7 @@ func draw_battle() -> void:
 	draw_floaters(false)
 	if terrace:
 		draw_weather()
+	draw_unit_overlay()
 	if battle.chapter == 3:
 		draw_cloud_overlay()
 	draw_set_transform(Vector2.ZERO)
@@ -2239,14 +2417,15 @@ func draw_hud() -> void:
 		label("冻结 %d" % ceili(battle.income_frozen_until - battle.time), Rect2(pc.x - 40, pc.y - 12, 80, 24), 15, TEXT, MID, 2, 5, Color("#2b5a7a"))
 	var active := equipped()
 	var wide := active.size() <= 5
-	var card_w := 104.0 if wide else 94.0
-	var card_step := 114.0 if wide else 100.0
-	var first_x := 246.0 if wide else 238.0
+	var narrow := active.size() >= 7
+	var card_w := 104.0 if wide else 80.0 if narrow else 94.0
+	var card_step := 114.0 if wide else 86.0 if narrow else 100.0
+	var first_x := 246.0 if wide else 236.0 if narrow else 238.0
 	for slot in range(active.size()):
 		draw_card(active[slot], slot, Rect2(first_x + slot * card_step, 24, card_w, 108))
 	var x := maxf(866.0, first_x + active.size() * card_step + 30.0)
 	round_button("broom", Vector2(x, 64), 30, toggle_remove, selected == -2, "移除")
-	var step := 74.0 if wide else 70.0
+	var step := 74.0 if wide else 64.0 if narrow else 70.0
 	if battle.charger:
 		x += step
 		tool_button("bolt", Vector2(x, 64), toggle_overclock, selected == -3, "超频 %d" % Battle.CHARGER_COST, battle.charger_wait(), Battle.CHARGER_CD, battle.power >= Battle.CHARGER_COST)
@@ -2415,7 +2594,7 @@ func draw_tower(row: int, col: int, tower: Dictionary) -> void:
 		scale = Vector2(k, k)
 	var hit_age: float = battle.time - tower.hit
 	var tint := Color.WHITE
-	var idle: String = battle.idle_reason(tower) if battle.chapter >= 2 else ""
+	var idle: String = battle.idle_reason(tower)
 	if tower.sealed > battle.time:
 		tint = Color("#c9a3c0")
 	elif hit_age < 0.12:
@@ -2432,8 +2611,7 @@ func draw_tower(row: int, col: int, tower: Dictionary) -> void:
 		draw_arc(Vector2(x, y + height * 0.45), 34, -PI * 0.5, -PI * 0.5 + TAU * k, 32, SKY, 4.0, true)
 		for b in range(3):
 			draw_circle(Vector2(x + 18 + b * 7, y + 2 - b * 8 - sin(ui_time * 6.0 + b) * 2), 3 + b, Color(CREAM, 0.85), true, -1.0, true)
-	if battle.chapter >= 2:
-		draw_status(tower, x, y, height)
+	draw_status(tower, x, y, height)
 	if acting and tower.card != 1:
 		cast_fx(tower.card, Vector2(x + 31, y + height * 0.43), t)
 	if tower.hp < card.hp:
@@ -2634,6 +2812,10 @@ func cast_fx(kind: int, p: Vector2, t: float) -> void:
 		14: effect("llama_shot", p + Vector2(10 * t, 0), Vector2(50, 40) * (0.6 + t * 0.5), fade)
 		15: effect("paint_wall", p + Vector2(18 * t, 0), Vector2(60, 60) * (0.5 + t * 0.5), fade * 0.8)
 		16: effect("r1_beam", p + Vector2(20 * t, 0), Vector2(90, 40) * (0.6 + t * 0.5), fade)
+		35: effect("gpt_hit", p + Vector2(9 * t, 0), Vector2(60, 60) * (0.5 + t), fade * 0.9, Color(1.0, 0.85, 0.6))
+		36: effect("gemini_shot", p + Vector2(14 * t, -8), Vector2(90, 54) * (0.62 + t * 0.4), fade)
+		37: effect("grok_hit", p + Vector2(7, 0), Vector2(70, 70) * (0.63 + t * 0.42), fade)
+		38: effect("qwen_shot", p + Vector2(16 * t, 0), Vector2(96, 64) * (0.66 + t * 0.48), fade)
 
 func draw_shot(shot: Dictionary) -> void:
 	var age: float = battle.time - shot.born
@@ -2641,13 +2823,22 @@ func draw_shot(shot: Dictionary) -> void:
 	if shot.card == 7:
 		p.y -= 12.0 * absf(sin(age * 8.0))
 	var size := Vector2(74, 35) * (1.0 + 0.09 * sin(age * 24.0))
+	var tint := Color.WHITE
 	if shot.card in SMALL_SHOTS:
 		size *= 0.55
 	elif shot.card == 10:
 		size = Vector2(60, 64)
+	elif shot.card == 37:
+		size *= 1.45
+		p.y -= 14.0 * absf(sin(age * 7.0))
+	elif shot.card == 38:
+		size = Vector2(96, 60)
+	elif shot.card == 35:
+		# GPT-4o：光 / 冰 / 火三色轮换
+		tint = [Color(1.0, 0.95, 0.75), Color(0.6, 0.9, 1.0), Color(1.0, 0.55, 0.3)][shot.get("elem", 0)]
 	for k in range(1, 4):
-		effect(SHOT_ART[shot.card], p - Vector2(k * 12.0, 0), size * (1.0 - k * 0.16), 0.32 - k * 0.08)
-	effect(SHOT_ART[shot.card], p, size)
+		effect(SHOT_ART[shot.card], p - Vector2(k * 12.0, 0), size * (1.0 - k * 0.16), 0.32 - k * 0.08, tint)
+	effect(SHOT_ART[shot.card], p, size, 1.0, tint)
 
 func draw_impact(hit: Dictionary) -> void:
 	var age: float = battle.time - hit.born
@@ -2927,6 +3118,10 @@ func figure(key: String, rect: Rect2, tint: Color) -> void:
 		"skywork", "glm_flash": sprite("glm", rect, tint * Color(0.75, 0.8, 1.0))
 		"ministral": sprite("mistral" if art.has("mistral") else "clerk", rect, tint * Color(1.0, 0.85, 0.7))
 		"doubao_lite": sprite("doubao" if art.has("doubao") else "clerk", rect, tint * Color(1.0, 0.85, 0.9))
+		"gpt4o": sprite("gpt", rect, tint * Color(1.0, 0.9, 0.7))
+		"ultra": sprite("gemini", rect, tint * Color(0.75, 0.85, 1.0))
+		"heavy": sprite("grok", rect, tint * Color(1.0, 0.75, 0.6))
+		"qwenmax": sprite("qwen", rect, tint * Color(0.9, 0.75, 1.0))
 		"firewall":
 			var c := rect.get_center()
 			for k in range(4):
@@ -3093,7 +3288,8 @@ func draw_gate(row: int) -> void:
 	box(tag, COCOA, GOLD, 10, 2)
 	label("%.1f" % left, tag, 12, GOLD, MID, 2)
 
-func draw_cloud_overlay() -> void:
+# 云备份恢复中的店员、天工光柱的落点：店员可以带进任何一章，所以每章都要画。
+func draw_unit_overlay() -> void:
 	var t: float = battle.time
 	for item in battle.restores:
 		var c := cell_center(item.row, item.col)
@@ -3109,6 +3305,9 @@ func draw_cloud_overlay() -> void:
 		draw_circle(Vector2.ZERO, 70.0 * k, Color("#8aa6ff", 0.18), true, -1.0, true)
 		draw_set_transform(cam)
 		draw_line(p + Vector2(0, -260), p + Vector2(0, 20), Color(0.8, 0.88, 1.0, 0.25 * k), 3.0 + 8.0 * k, true)
+
+func draw_cloud_overlay() -> void:
+	var t: float = battle.time
 	if battle.storm_until > t:
 		for i in range(60):
 			var x := fposmod(i * 97.0 - t * 90.0, 1320.0) - 20.0
@@ -3128,3 +3327,163 @@ func draw_cloud_overlay() -> void:
 func lock_cover(c: Vector2) -> void:
 	draw_circle(c, 29, Color(PLUM, 0.72), true, -1.0, true)
 	glyph("lock", c, 12, BERRY)
+
+
+# ---------------------------------------------------------------- 金币图标、商店
+
+func coin(c: Vector2, r: float) -> void:
+	draw_circle(c, r, COCOA, true, -1.0, true)
+	draw_circle(c, r - maxf(1.5, r * 0.14), Color("#ffcf3d"), true, -1.0, true)
+	draw_circle(c, r * 0.58, Color("#f2a826"), true, -1.0, true)
+	draw_arc(c, r * 0.58, -2.4, -0.6, 10, Color(1, 1, 1, 0.7), maxf(1.0, r * 0.12), true)
+	box(Rect2(c + Vector2(-r * 0.12, -r * 0.34), Vector2(r * 0.24, r * 0.68)), Color("#fff1a8"), Color.TRANSPARENT, 2)
+
+func gold_pill(rect: Rect2, small: bool = false) -> void:
+	box(rect, COCOA, GOLD, int(rect.size.y * 0.5), 3 if not small else 2, 0.3)
+	var r := rect.size.y * 0.36
+	coin(rect.position + Vector2(rect.size.y * 0.5, rect.size.y * 0.5), r)
+	label(str(gold), Rect2(rect.position + Vector2(rect.size.y * 0.95, 0), Vector2(rect.size.x - rect.size.y * 1.15, rect.size.y)), 15 if small else 22, GOLD, MID, 2)
+
+# 中文按字换行。
+func paragraph(value: String, rect: Rect2, size: int, color: Color, gap: float = 1.5) -> void:
+	var face: Font = fonts[1]
+	var lines := []
+	var line := ""
+	for ch in value:
+		var probe: String = line + ch
+		if line != "" and face.get_string_size(probe, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > rect.size.x:
+			lines.append(line)
+			line = ch
+		else:
+			line = probe
+	if line != "":
+		lines.append(line)
+	var y := rect.position.y + face.get_ascent(size)
+	for text in lines:
+		if y > rect.end.y:
+			break
+		draw_string(face, Vector2(rect.position.x, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+		y += size * gap
+
+func draw_shop() -> void:
+	backdrop("cafe", 0.66)
+	draw_petals()
+	header("咖啡店商城", "商店", "用金币雇用 AI 娘、扩充卡槽。买下的店员任何一关都能带。", close_shop)
+	var wallet := Rect2(950, 38, 276, 84)
+	paper(wallet, 20)
+	coin(Vector2(994, 80), 22)
+	label(str(gold), Rect2(1026, 46, 186, 40), 30, COCOA, 0, 2)
+	label("卡槽 %d / %d · 店员 %d / %d" % [slots, Campaign.MAX_SLOTS, owned.count(true), owned.size()], Rect2(1027, 84, 190, 26), 13, INK_SOFT, 0, 1)
+	for t in range(SHOP_TABS.size()):
+		var tab := Rect2(134 + t * 132, 140, 122, 34)
+		var on := t == shop_tab
+		box(tab, SAKURA if on else CREAM, COCOA, 17, 3)
+		label(SHOP_TABS[t], tab, 15, TEXT if on else COCOA, MID, 2, 4 if on else 0, SAKURA_DEEP)
+		if not on:
+			buttons.append([tab, set_shop_tab.bind(t), "page"])
+	var panel := Rect2(56, 186, 808, 470)
+	paper(panel, 22)
+	var detail := Rect2(880, 136, 344, 520)
+	paper(detail, 22)
+	if shop_tab == 3:
+		draw_slot_shop(panel, detail)
+		return
+	var items := shop_items(shop_tab)
+	var columns := 8
+	var gap := 8.0
+	var w := (panel.size.x - 36.0 - (columns - 1) * gap) / columns
+	var h := 140.0
+	for k in range(items.size()):
+		var rect := Rect2(panel.position.x + 18 + (k % columns) * (w + gap), panel.position.y + 18 + floorf(float(k) / columns) * (h + 10), w, h)
+		draw_shop_tile(items[k], rect)
+	if shop_tab == 1:
+		var note := Rect2(panel.position.x + 18, panel.end.y - 64, panel.size.x - 36, 46)
+		box(note, Color(GOLD, 0.25), GOLD_DEEP, 14, 2)
+		label("No.36 ~ 39 是商店限定 SP：GPT-4o、Gemini Ultra、Grok Heavy、Qwen-Max，只能用金币买到。", note.grow_individual(-16, 0, -16, 0), 15, COCOA, MID, 2)
+	if shop_focus in items:
+		draw_shop_detail(shop_focus, detail)
+
+func draw_shop_tile(c: int, r: Rect2) -> void:
+	var card: Dictionary = Campaign.CARDS[c]
+	var have := owns(c)
+	var on := c == shop_focus
+	var hot := r.has_point(pointer)
+	var rect := r
+	if hot or on:
+		rect.position.y -= 3
+	if on:
+		box(rect.grow(4), Color(ACCENTS[c], 0.5), Color.TRANSPARENT, 16)
+	box(rect, CREAM if have else Color("#fff1dc"), ACCENTS[c].darkened(0.25) if on else COCOA, 13, 3 if on else 2, 0.2)
+	box(Rect2(rect.position + Vector2(3, 3), Vector2(rect.size.x - 6, 16)), ACCENTS[c], Color.TRANSPARENT, 8)
+	label("No.%d" % (c + 1), Rect2(rect.position + Vector2(7, 3), Vector2(50, 16)), 10, TEXT, 0, 2, 2, Color(COCOA, 0.6))
+	sprite(card.key, Rect2(rect.position + Vector2(5, 20), Vector2(rect.size.x - 10, 76)))
+	label(card.name, Rect2(rect.position.x + 3, rect.position.y + 96, rect.size.x - 6, 18), 12, COCOA, MID, 2)
+	var tag := Rect2(rect.position.x + 6, rect.position.y + 116, rect.size.x - 12, 18)
+	if have:
+		box(tag, Color(MINT, 0.6), COCOA, 9, 1)
+		label("已拥有", tag, 11, COCOA, MID, 2)
+	else:
+		box(tag, COCOA, Color.TRANSPARENT, 9)
+		coin(tag.position + Vector2(11, 9), 6)
+		label(str(Campaign.PRICES[c]), Rect2(tag.position + Vector2(18, 0), Vector2(tag.size.x - 20, 18)), 11, GOLD if gold >= Campaign.PRICES[c] else Color("#c9a58a"), MID, 2)
+	buttons.append([r, focus_item.bind(c), "select"])
+
+func draw_shop_detail(c: int, r: Rect2) -> void:
+	var card: Dictionary = Campaign.CARDS[c]
+	var accent: Color = ACCENTS[c]
+	var appear := clampf((ui_time - shop_at) / 0.3, 0.0, 1.0)
+	for i in range(4):
+		draw_circle(r.position + Vector2(172, 150), 110.0 - i * 22.0, Color(accent, 0.06 + i * 0.03), true, -1.0, true)
+	sprite(card.key, Rect2(r.position.x + 52, r.position.y + 22, 240, 220), Color(1, 1, 1, appear))
+	var tag: String = card.get("tag", "")
+	if tag != "":
+		var pill := Rect2(r.end.x - 70, r.position.y + 18, 54, 26)
+		box(pill, COCOA if tag == "SP" else Color("#5a3d8a"), Color.TRANSPARENT, 13)
+		label(tag, pill, 14, GOLD if tag == "SP" else TEXT, MID, 2)
+	label(card.name, Rect2(r.position.x + 20, r.position.y + 248, r.size.x - 40, 36), 26, COCOA, 0, 2)
+	label(card.role, Rect2(r.position.x + 20, r.position.y + 284, r.size.x - 40, 22), 15, accent.darkened(0.3), 0, 2)
+	var stats := "部署 %d 算力 · 生命 %d" % [card.cost, card.hp]
+	if float(card.interval) > 0.0:
+		stats += " · 间隔 %.1f 秒" % card.interval
+	label(stats, Rect2(r.position.x + 20, r.position.y + 310, r.size.x - 40, 20), 13, INK_SOFT, 0, 1)
+	paragraph(card.desc, Rect2(r.position.x + 20, r.position.y + 338, r.size.x - 40, 110), 14, COCOA)
+	var buy := Rect2(r.position.x + 20, r.end.y - 70, r.size.x - 40, 54)
+	if owns(c):
+		box(buy, Color(MINT, 0.5), COCOA, 27, 2)
+		label("已拥有 · 去配卡页带上她", buy, 16, COCOA, MID, 2)
+	else:
+		var price: int = Campaign.PRICES[c]
+		candy("购买  %d 金币" % price if gold >= price else "还差 %d 金币" % (price - gold), buy, buy_card.bind(c) if gold >= price else Callable(), 0, 19)
+
+func draw_slot_shop(panel: Rect2, detail: Rect2) -> void:
+	label("卡槽决定每一局能带几位店员。开局 4 个，最多 %d 个。" % Campaign.MAX_SLOTS, Rect2(panel.position.x + 28, panel.position.y + 18, panel.size.x - 56, 30), 17, COCOA, 0, 2)
+	for k in range(Campaign.MAX_SLOTS):
+		var c := Vector2(panel.position.x + 92 + k * 104, panel.position.y + 150)
+		var have := k < slots
+		var next := k == slots
+		box(Rect2(c - Vector2(42, 56), Vector2(84, 112)), CREAM if have else Color("#efe0cc"), SAKURA_DEEP if next else COCOA, 14, 3 if next else 2, 0.2)
+		if have:
+			glyph("check", c + Vector2(0, -6), 16, MINT_DEEP)
+		else:
+			glyph("lock", c + Vector2(0, -8), 13, INK_SOFT)
+		label("第 %d 槽" % (k + 1), Rect2(c.x - 42, c.y + 24, 84, 24), 13, COCOA if have else INK_SOFT, MID, 2)
+		if not have and k >= Campaign.START_SLOTS:
+			var price := int(Campaign.SLOT_PRICES[k - Campaign.START_SLOTS])
+			var tag := Rect2(c.x - 38, c.y + 64, 76, 22)
+			box(tag, COCOA, Color.TRANSPARENT, 11)
+			coin(tag.position + Vector2(13, 11), 7)
+			label(str(price), Rect2(tag.position + Vector2(22, 0), Vector2(52, 22)), 12, GOLD, MID, 2)
+	paragraph("小提示：第 02、03 章的推荐阵容都是 6 位店员。每关第一次通关、第一次拿到二星和三星都会给金币，没拿到新星的重玩也有少量金币。",
+		Rect2(panel.position.x + 28, panel.position.y + 290, panel.size.x - 56, 120), 15, INK_SOFT)
+	label("卡槽", Rect2(detail.position.x + 20, detail.position.y + 24, detail.size.x - 40, 36), 26, COCOA, 0, 2)
+	label("现在可以带 %d 位店员" % slots, Rect2(detail.position.x + 20, detail.position.y + 64, detail.size.x - 40, 26), 16, INK_SOFT, 0, 1)
+	for k in range(Campaign.MAX_SLOTS):
+		var p := Vector2(detail.position.x + 44 + k * 42, detail.position.y + 140)
+		box(Rect2(p - Vector2(17, 24), Vector2(34, 48)), SAKURA if k < slots else Color("#e6d2ba"), COCOA, 8, 2)
+	var buy := Rect2(detail.position.x + 20, detail.end.y - 70, detail.size.x - 40, 54)
+	var price := Campaign.slot_price(slots)
+	if price < 0:
+		box(buy, Color(MINT, 0.5), COCOA, 27, 2)
+		label("卡槽已经全部解锁", buy, 16, COCOA, MID, 2)
+	else:
+		candy("购买第 %d 个卡槽  %d 金币" % [slots + 1, price] if gold >= price else "还差 %d 金币" % (price - gold), buy, buy_slot if gold >= price else Callable(), 0, 17)

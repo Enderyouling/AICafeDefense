@@ -1,5 +1,5 @@
 extends RefCounted
-# 关卡与数值数据：店员、来客、第 01 章与第 02 章的关卡表。
+# 关卡与数值数据：店员、来客、三章关卡表，以及金币、商店价格。
 
 const CARDS = [
 	{"name": "GPT", "role": "光弹输出", "desc": "向同一路发射光弹。", "key": "gpt", "cost": 100, "hp": 100, "cooldown": 5.0, "interval": 1.2, "pose": 0.4},
@@ -36,11 +36,30 @@ const CARDS = [
 	{"name": "Gemini Nano", "role": "mini · 随身治疗", "desc": "附属炮台：同格主力和自己每秒回复 4 生命。", "key": "nano", "cost": 40, "hp": 40, "cooldown": 6.0, "interval": 0.0, "pose": 0.3, "tag": "mini"},
 	{"name": "Ministral", "role": "mini · 寒风小弹", "desc": "附属炮台：小冰弹 8 伤害并减速 30%。", "key": "ministral", "cost": 60, "hp": 40, "cooldown": 6.0, "interval": 1.6, "pose": 0.35, "tag": "mini"},
 	{"name": "豆包 Lite", "role": "mini · 小额产出", "desc": "附属炮台：部署 6 秒后开始，每 10 秒产出 10 算力。", "key": "doubao_lite", "cost": 50, "hp": 40, "cooldown": 8.0, "interval": 10.0, "pose": 0.6, "tag": "mini"},
-	{"name": "GLM Flash", "role": "mini · 照明扫描", "desc": "附属炮台：每 6 秒照亮本路前方 4 格，让熄灯中和潜行的来客显形 4 秒。", "key": "glm_flash", "cost": 50, "hp": 40, "cooldown": 8.0, "interval": 6.0, "pose": 0.4, "tag": "mini"}
+	{"name": "GLM Flash", "role": "mini · 照明扫描", "desc": "附属炮台：每 6 秒照亮本路前方 4 格，让熄灯中和潜行的来客显形 4 秒。", "key": "glm_flash", "cost": 50, "hp": 40, "cooldown": 8.0, "interval": 6.0, "pose": 0.4, "tag": "mini"},
+	{"name": "GPT-4o", "role": "SP · 全能光谱", "desc": "SP 版 GPT：光弹按「光 → 冰 → 火」轮换。光弹 26 伤害；冰弹 20 伤害并减速 30%；火弹 18 伤害并点燃 4 秒。", "key": "gpt4o", "cost": 175, "hp": 120, "cooldown": 12.0, "interval": 1.3, "pose": 0.45, "tag": "SP"},
+	{"name": "Gemini Ultra", "role": "SP · 五路齐射", "desc": "SP 版 Gemini：同时攻击本路和上下各两路（最多 5 路），每发 18 伤害。", "key": "ultra", "cost": 250, "hp": 130, "cooldown": 16.0, "interval": 2.0, "pose": 0.55, "tag": "SP"},
+	{"name": "Grok Heavy", "role": "SP · 重磅星爆", "desc": "SP 版 Grok：重磅星弹命中时爆炸，本路和相邻两路 1.3 格内的来客都受到 80 伤害。", "key": "heavy", "cost": 275, "hp": 130, "cooldown": 20.0, "interval": 5.0, "pose": 0.6, "tag": "SP"},
+	{"name": "Qwen-Max", "role": "SP · 千问破阵", "desc": "SP 版 Qwen：巨扇贯穿整路，打中路上每一位来客 30 伤害，对护盾双倍、无视装甲。", "key": "qwenmax", "cost": 200, "hp": 120, "cooldown": 14.0, "interval": 2.6, "pose": 0.5, "tag": "SP"}
 ]
 
+# 旧版按关卡解锁店员的位置。现在店员靠金币购买，这张表只用来给老存档迁移：玩到过哪一关，就送那一关以前解锁的店员。
+# 最后 4 位商店限定 SP 从来不随关卡解锁（99）。
 const UNLOCKS = [0, 1, 2, 3, 5, 7, 9, 11, 22, 23, 24, 26, 27, 29, 30, 31, 28, 22, 24, 25, 28,
-	34, 35, 36, 38, 39, 37, 41, 42, 40, 43, 34, 36, 35, 37]
+	34, 35, 36, 38, 39, 37, 41, 42, 40, 43, 34, 36, 35, 37, 99, 99, 99, 99]
+
+# ---------------------------------------------------------------- 金币与商店
+# 新存档自带的店员；其余店员都在商店用金币购买，买下后任何一关都能带。
+const START_CARDS = [0, 1, 2, 3]
+# 每位店员的金币价格（自带的为 0）。
+const PRICES = [0, 0, 0, 0, 450, 400, 350, 600,
+	700, 650, 750, 750, 600, 700, 700, 800, 1500, 300, 300, 400, 350,
+	800, 900, 800, 1000, 900, 700, 900, 1100, 1500, 1400, 400, 400, 400, 400,
+	3000, 3500, 3500, 3000]
+# 卡槽：开局 4 个，最多 7 个；SLOT_PRICES[k] 是买第 5 + k 个卡槽的价格。
+const START_SLOTS := 4
+const MAX_SLOTS := 7
+const SLOT_PRICES = [250, 1500, 4000]
 const CHAPTER_STARTS = [0, 22, 34]
 const CHAPTER_NAMES = ["算力咖啡厅", "露台风波", "云端分店"]
 const TRIAL = [
@@ -210,3 +229,62 @@ static func is_mini(card: int) -> bool:
 
 static func available(card: int, stage: int) -> bool:
 	return card >= 0 and card < UNLOCKS.size() and UNLOCKS[card] <= stage
+
+# 一关的基础金币：第 01 章 100 起、每关 +20；第 02 章 500 起、每关 +30；第 03 章 1000 起、每关 +50。
+static func base_reward(stage: int) -> int:
+	var number := chapter(stage)
+	var k: int = stage - CHAPTER_STARTS[number - 1]
+	match number:
+		1: return 100 + 20 * k
+		2: return 500 + 30 * k
+	return 1000 + 50 * k
+
+# 打完一关拿多少金币：首次通关拿基础奖励；第一次拿到 ★★、★★★ 各再加一半；
+# 没有新星的重玩拿四分之一；失败时每击退一位来客 3 金币，最多四分之一。
+static func gold_reward(stage: int, old_stars: int, new_stars: int, won: bool, defeated: int) -> int:
+	var base := base_reward(stage)
+	if not won:
+		return mini(base / 4, defeated * 3)
+	var gold := 0
+	if old_stars == 0:
+		gold += base
+	for s in [2, 3]:
+		if new_stars >= s and old_stars < s:
+			gold += base / 2
+	return gold if gold > 0 else base / 4
+
+static func slot_price(owned_slots: int) -> int:
+	var k := owned_slots - START_SLOTS
+	return SLOT_PRICES[k] if k >= 0 and k < SLOT_PRICES.size() else -1
+
+# 和 main.gd 的逐关解锁规则一致：第 02 章第一关要求通关 1-20（1-20EX 不是前置）。
+static func reached(stars: Array, stage: int) -> bool:
+	if stage <= 0:
+		return true
+	if stage >= stars.size():
+		return false
+	if stage == CHAPTER_STARTS[1]:
+		return stars[20] > 0
+	return stars[stage - 1] > 0
+
+# 老存档第一次打开新版：送回旧版里已经解锁的店员和当时的上阵人数，每颗星再补 40 金币。
+static func migrate(stars: Array) -> Dictionary:
+	var owned := []
+	owned.resize(CARDS.size())
+	owned.fill(false)
+	for c in START_CARDS:
+		owned[c] = true
+	var played := false
+	for n in stars:
+		if n > 0:
+			played = true
+	for c in range(CARDS.size()):
+		if UNLOCKS[c] < 99 and played and reached(stars, UNLOCKS[c]):
+			owned[c] = true
+	var slots := START_SLOTS
+	if played:
+		slots = 6 if reached(stars, CHAPTER_STARTS[1]) else 5
+	var total := 0
+	for n in stars:
+		total += int(n)
+	return {"gold": total * 40, "owned": owned, "slots": slots}
